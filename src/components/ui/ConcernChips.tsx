@@ -21,7 +21,7 @@ export default function ConcernChips({ selected, onSelect }: ConcernChipsProps) 
             className={`px-4 py-2 rounded-full border text-[12.5px] font-semibold transition-all duration-200 ${
               isActive
                 ? 'bg-plum border-plum text-white shadow-sm'
-                : 'border-[#E5E7EB] text-text-secondary bg-transparent hover:border-plum hover:text-plum'
+                : 'border-[#E5E7EB] text-ink bg-white hover:border-plum hover:text-plum'
             }`}
           >
             {c.label}

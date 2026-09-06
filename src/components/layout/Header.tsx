@@ -69,7 +69,7 @@ export default function Header() {
                 pathname === '/shop' ? 'text-plum' : 'text-ink'
               }`}
             >
-              Shop All
+              Shop
             </Link>
             <Link
               href="/shop?category=face"
@@ -169,7 +169,7 @@ export default function Header() {
               onClick={() => setIsMobileMenuOpen(false)}
               className="py-3 text-[15px] font-semibold text-ink border-b border-border-subtle/50 hover:text-plum"
             >
-              Shop All
+              Shop
             </Link>
             <Link
               href="/shop?category=face"

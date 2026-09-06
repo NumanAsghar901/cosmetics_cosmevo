@@ -274,7 +274,9 @@ export async function getAllProducts(): Promise<Product[]> {
       return BUNDLED_PRODUCTS;
     }
 
-    return data.map((row) => ({
+    return data
+      .filter((row) => row.name !== 'LACABINE CREAM BTX7 LIFT 50ML')
+      .map((row) => ({
       id: row.id,
       slug: row.slug,
       name: row.name,

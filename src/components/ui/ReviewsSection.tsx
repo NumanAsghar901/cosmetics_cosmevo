@@ -22,6 +22,18 @@ interface ReviewsSectionProps {
 const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
+function generateDeterministicRandomDate(reviewId: string) {
+  let hash = 0;
+  for (let i = 0; i < reviewId.length; i++) {
+    hash = Math.imul(31, hash) + reviewId.charCodeAt(i) | 0;
+  }
+  const seed = Math.abs(hash);
+  const start = new Date('2025-01-01').getTime();
+  const end = new Date().getTime();
+  const randomTime = start + (seed % (end - start));
+  return new Date(randomTime).toISOString();
+}
+
 function StarRating({ rating, interactive = false, onRate }: { rating: number; interactive?: boolean; onRate?: (r: number) => void }) {
   const [hovered, setHovered] = useState(0);
   return (
@@ -361,7 +373,7 @@ export default function ReviewsSection({ productId }: ReviewsSectionProps) {
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-bold text-ink text-sm truncate">{review.user_name}</span>
                     <span className="text-xs text-text-secondary shrink-0">
-                      {new Date(review.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {new Date(review.is_dummy ? generateDeterministicRandomDate(review.id) : review.created_at).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
                   <div className="mt-0.5">
