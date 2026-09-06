@@ -18,10 +18,10 @@ export default function ConcernChips({ selected, onSelect }: ConcernChipsProps) 
             key={c.key}
             type="button"
             onClick={() => onSelect(isActive ? null : c.key)}
-            className={`px-4 py-2 rounded-full border text-[12.5px] font-semibold transition-all duration-200 ${
+            className={`px-4 py-2 rounded-full border border-solid text-[12.5px] font-semibold transition-all duration-200 ${
               isActive
                 ? 'bg-plum border-plum text-white shadow-sm'
-                : 'border-[#E5E7EB] text-ink bg-white hover:border-plum hover:text-plum'
+                : 'border-[#D1D5DB] text-ink bg-white hover:border-plum hover:text-plum'
             }`}
           >
             {c.label}
