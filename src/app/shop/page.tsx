@@ -7,8 +7,9 @@ import FilterPills from '@/components/ui/FilterPills';
 import ConcernChips from '@/components/ui/ConcernChips';
 import ProductCard from '@/components/ui/ProductCard';
 import CtaBanner from '@/components/sections/CtaBanner';
-import { BUNDLED_PRODUCTS } from '@/lib/products';
+import { getAllProducts } from '@/lib/products';
 import { getCategoryLabel } from '@/lib/utils';
+import { Product } from '@/lib/types';
 
 function ShopContent() {
   const searchParams = useSearchParams();
@@ -17,8 +18,13 @@ function ShopContent() {
   const categoryParam = searchParams.get('category') || 'all';
   const concernParam = searchParams.get('concern') || null;
 
+  const [products, setProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryParam);
   const [selectedConcern, setSelectedConcern] = useState<string | null>(concernParam);
+
+  useEffect(() => {
+    getAllProducts().then(setProducts);
+  }, []);
 
   useEffect(() => {
     if (categoryParam) setSelectedCategory(categoryParam);
@@ -44,12 +50,12 @@ function ShopContent() {
   };
 
   const filteredProducts = useMemo(() => {
-    return BUNDLED_PRODUCTS.filter((p) => {
+    return products.filter((p) => {
       const matchCat = selectedCategory === 'all' || p.category === selectedCategory;
       const matchConcern = !selectedConcern || p.concerns.includes(selectedConcern);
       return matchCat && matchConcern;
     });
-  }, [selectedCategory, selectedConcern]);
+  }, [products, selectedCategory, selectedConcern]);
 
   return (
     <div className="py-8 md:py-12">

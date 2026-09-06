@@ -8,6 +8,17 @@ import ProductArt from './ProductArt';
 import { useCart } from '@/context/CartContext';
 import { useModal } from '@/context/ModalContext';
 
+function getFakeCardStats(productId: string | number) {
+  const seed = typeof productId === 'string'
+    ? productId.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+    : Number(productId);
+  const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+  const baseReviews = 500 + (seed % 1001);
+  const reviewCount = baseReviews + daysSinceEpoch * 5;
+  const avgRating = 4.4 + (seed % 7) * 0.1; // 4.4 – 5.0
+  return { reviewCount, avgRating: Math.min(5.0, avgRating) };
+}
+
 interface ProductCardProps {
   product: Product;
 }
@@ -61,9 +72,31 @@ export default function ProductCard({ product }: ProductCardProps) {
       >
         {product.name}
       </Link>
-      <p className="text-[13.5px] text-text-secondary leading-[1.45] line-clamp-2 min-h-[38px] mb-3">
+      <p className="text-[13.5px] text-text-secondary leading-[1.45] line-clamp-2 min-h-[38px] mb-2">
         {product.tagline}
       </p>
+
+      {/* Mini star rating */}
+      {(() => {
+        const { reviewCount, avgRating } = getFakeCardStats(product.id);
+        const fullStars = Math.round(avgRating);
+        return (
+          <div className="flex items-center gap-1 mb-3">
+            <div className="flex">
+              {[1,2,3,4,5].map((s) => (
+                <svg key={s} width="11" height="11" viewBox="0 0 24 24"
+                  fill={s <= fullStars ? '#6B21A8' : 'none'}
+                  stroke={s <= fullStars ? '#6B21A8' : '#CBD5E1'}
+                  strokeWidth="1.5">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              ))}
+            </div>
+            <span className="text-[11px] text-text-secondary font-medium">{avgRating.toFixed(1)}</span>
+            <span className="text-[11px] text-text-secondary">({reviewCount.toLocaleString()})</span>
+          </div>
+        );
+      })()}
 
       {/* Price and Actions */}
       <div className="flex items-center justify-between mt-auto pt-2 border-t border-border-subtle">

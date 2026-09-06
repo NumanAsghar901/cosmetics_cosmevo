@@ -7,7 +7,21 @@ import { Product } from '@/lib/types';
 import { fmtPrice, getCategoryLabel, getToneFor, getWhatsAppUrl } from '@/lib/utils';
 import ProductArt from '@/components/ui/ProductArt';
 import ProductCard from '@/components/ui/ProductCard';
+import ReviewsSection from '@/components/ui/ReviewsSection';
 import { useCart } from '@/context/CartContext';
+
+// Deterministic fake stats: base seeded by product.id, grows by +5 each day
+function getFakeStats(productId: string | number) {
+  const seed = typeof productId === 'string'
+    ? productId.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+    : Number(productId);
+  const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+  const baseSold = 200 + (seed % 1401);      // 200-1600
+  const baseReviews = 500 + (seed % 1001);  // 500-1500
+  const sold = baseSold + daysSinceEpoch * 5;
+  const reviewCount = baseReviews + daysSinceEpoch * 5;
+  return { sold, reviewCount };
+}
 
 interface Props {
   product: Product;
@@ -87,6 +101,39 @@ export default function ProductDetailClient({ product, related }: Props) {
             <p className="text-base text-text-secondary mt-3 leading-relaxed">
               {product.tagline}
             </p>
+
+            {/* Fake Stats: Reviews & Sold */}
+            {(() => {
+              const { sold, reviewCount } = getFakeStats(product.id);
+              const avgRating = 4.5 + ((typeof product.id === 'string' ? product.id.charCodeAt(0) : Number(product.id)) % 6) * 0.1;
+              return (
+                <div className="flex items-center gap-4 mt-3 flex-wrap">
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex">
+                      {[1,2,3,4,5].map((s) => (
+                        <svg key={s} width="14" height="14" viewBox="0 0 24 24"
+                          fill={s <= Math.round(avgRating) ? '#6B21A8' : 'none'}
+                          stroke={s <= Math.round(avgRating) ? '#6B21A8' : '#CBD5E1'}
+                          strokeWidth="1.5">
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-xs font-bold text-ink">{avgRating.toFixed(1)}</span>
+                    <span className="text-xs text-text-secondary">({reviewCount.toLocaleString()} reviews)</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-text-secondary">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    <span><b className="text-ink">{sold.toLocaleString()}+</b> sold</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Price */}
             <div className="text-3xl font-extrabold text-ink mt-5 mb-6">
@@ -233,6 +280,9 @@ export default function ProductDetailClient({ product, related }: Props) {
             </div>
           </section>
         )}
+
+        {/* Reviews Section */}
+        <ReviewsSection productId={product.id} />
       </div>
 
       {/* Mobile Sticky Bottom Bar */}
