@@ -340,13 +340,15 @@ export default function CheckoutPage() {
                   <div>
                     <span className="text-sm font-bold text-ink block">Bank Transfer</span>
                     {formData.payment === 'bank' && (
-                      <div className="text-xs text-text-secondary mt-2 bg-white p-3 rounded-xl border border-border-subtle space-y-1">
-                        <div><strong>Bank:</strong> Meezan Bank</div>
-                        <div><strong>Title:</strong> COSMEVO COSMECEUTICALS</div>
-                        <div><strong>A/C:</strong> 02440102489293</div>
-                        <div><strong>IBAN:</strong> PK02MEZN0002440102489293</div>
-                        <div><strong>Branch:</strong> MUSTAFA ABAD BR-LAHORE</div>
-                        <div className="text-plum font-semibold mt-2">Please send the payment screenshot on WhatsApp to confirm your order.</div>
+                      <div className="text-sm text-text-secondary mt-3 bg-plum/5 p-4 rounded-xl border-2 border-plum/20 space-y-2">
+                        <div><strong className="text-ink">Bank:</strong> Meezan Bank</div>
+                        <div><strong className="text-ink">Title:</strong> COSMEVO COSMECEUTICALS</div>
+                        <div><strong className="text-ink">A/C:</strong> 02440102489293</div>
+                        <div><strong className="text-ink">IBAN:</strong> PK02MEZN0002440102489293</div>
+                        <div><strong className="text-ink">Branch:</strong> MUSTAFA ABAD BR-LAHORE</div>
+                        <div className="text-plum font-bold mt-3 text-[13px] bg-plum/10 p-2 rounded-lg text-center">
+                          Please send the payment screenshot on WhatsApp to confirm your order.
+                        </div>
                       </div>
                     )}
                   </div>
@@ -369,10 +371,12 @@ export default function CheckoutPage() {
                   <div>
                     <span className="text-sm font-bold text-ink block">JazzCash</span>
                     {formData.payment === 'jazzcash' && (
-                      <div className="text-xs text-text-secondary mt-2 bg-white p-3 rounded-xl border border-border-subtle space-y-1">
-                        <div><strong>Account No:</strong> 0321 4152626</div>
-                        <div><strong>Name:</strong> MUHAMMAD AURANGZAIB</div>
-                        <div className="text-plum font-semibold mt-2">Please send the payment screenshot on WhatsApp to confirm your order.</div>
+                      <div className="text-sm text-text-secondary mt-3 bg-plum/5 p-4 rounded-xl border-2 border-plum/20 space-y-2">
+                        <div><strong className="text-ink">Account No:</strong> 0321 4152626</div>
+                        <div><strong className="text-ink">Name:</strong> MUHAMMAD AURANGZAIB</div>
+                        <div className="text-plum font-bold mt-3 text-[13px] bg-plum/10 p-2 rounded-lg text-center">
+                          Please send the payment screenshot on WhatsApp to confirm your order.
+                        </div>
                       </div>
                     )}
                   </div>
@@ -395,10 +399,38 @@ export default function CheckoutPage() {
                   <div>
                     <span className="text-sm font-bold text-ink block">EasyPaisa</span>
                     {formData.payment === 'easypaisa' && (
-                      <div className="text-xs text-text-secondary mt-2 bg-white p-3 rounded-xl border border-border-subtle space-y-1">
-                        <div><strong>Account No:</strong> 0321 4152626</div>
-                        <div><strong>Name:</strong> MUHAMMAD AURANGZAIB</div>
-                        <div className="text-plum font-semibold mt-2">Please send the payment screenshot on WhatsApp to confirm your order.</div>
+                      <div className="text-sm text-text-secondary mt-3 bg-plum/5 p-4 rounded-xl border-2 border-plum/20 space-y-2">
+                        <div><strong className="text-ink">Account No:</strong> 0321 4152626</div>
+                        <div><strong className="text-ink">Name:</strong> MUHAMMAD AURANGZAIB</div>
+                        <div className="text-plum font-bold mt-3 text-[13px] bg-plum/10 p-2 rounded-lg text-center">
+                          Please send the payment screenshot on WhatsApp to confirm your order.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </label>
+
+                <label
+                  onClick={() => setFormData({ ...formData, payment: 'cod' })}
+                  className={`flex items-start gap-4 p-4 rounded-2xl border cursor-pointer transition-all ${
+                    formData.payment === 'cod' ? 'border-plum bg-plum/5 shadow-xs' : 'border-border-subtle hover:bg-cream'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="cod"
+                    checked={formData.payment === 'cod'}
+                    onChange={() => {}}
+                    className="mt-1 accent-plum"
+                  />
+                  <div>
+                    <span className="text-sm font-bold text-ink block">Cash on Delivery</span>
+                    {formData.payment === 'cod' && (
+                      <div className="text-sm text-text-secondary mt-3 bg-plum/5 p-4 rounded-xl border-2 border-plum/20 space-y-2">
+                        <div className="text-plum font-bold text-[13px] bg-plum/10 p-2 rounded-lg text-center">
+                          Pay directly to the rider when your order arrives.
+                        </div>
                       </div>
                     )}
                   </div>

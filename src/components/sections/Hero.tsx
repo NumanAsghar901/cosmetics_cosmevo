@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import ProductArt from '@/components/ui/ProductArt';
+import Image from 'next/image';
 
 interface HeroProps {
   onQuickCategory?: (cat: string) => void;
@@ -78,11 +78,11 @@ export default function Hero({ onQuickCategory }: HeroProps) {
 
           {/* Visual Showcase Column */}
           <div className="hero-visual grid grid-cols-2 gap-4 order-1 lg:order-2 reveal">
-            <div className="translate-y-4">
-              <ProductArt tone="face" cursorLabel="View" />
+            <div className="translate-y-4 relative w-full aspect-[4/5] rounded-[24px] overflow-hidden shadow-sm bg-cream">
+              <Image src="/images/Product-routine image.png" alt="Product routine" fill className="object-cover hover:scale-105 transition-transform duration-700 ease-out" sizes="(max-width: 1024px) 50vw, 25vw" priority />
             </div>
-            <div className="-translate-y-2">
-              <ProductArt tone="hair" cursorLabel="View" />
+            <div className="-translate-y-2 relative w-full aspect-[4/5] rounded-[24px] overflow-hidden shadow-sm bg-cream">
+              <Image src="/images/Body & Baby Care image.png" alt="Body and baby care" fill className="object-cover hover:scale-105 transition-transform duration-700 ease-out" sizes="(max-width: 1024px) 50vw, 25vw" priority />
             </div>
           </div>
         </div>

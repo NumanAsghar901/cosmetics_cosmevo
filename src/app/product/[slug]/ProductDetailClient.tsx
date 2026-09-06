@@ -16,10 +16,11 @@ function getFakeStats(productId: string | number) {
     ? productId.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
     : Number(productId);
   const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-  const baseSold = 400 + (seed % 1301);      // 400-1700
-  const baseReviews = 400 + (seed % 1301);  // 400-1700
-  const sold = baseSold + daysSinceEpoch * 5;
-  const reviewCount = baseReviews + daysSinceEpoch * 5;
+  
+  const dailyOffset = daysSinceEpoch * 5;
+  const sold = 400 + ((seed + dailyOffset) % 1301); // Strictly 400-1700
+  const reviewCount = 400 + ((seed * 3 + dailyOffset) % 1301); // Strictly 400-1700
+  
   return { sold, reviewCount };
 }
 

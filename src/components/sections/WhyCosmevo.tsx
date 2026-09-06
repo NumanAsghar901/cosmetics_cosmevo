@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import ProductArt from '@/components/ui/ProductArt';
+import Image from 'next/image';
 
 export default function WhyCosmevo() {
   return (
@@ -89,8 +89,8 @@ export default function WhyCosmevo() {
 
           {/* Visual Right */}
           <div className="flex justify-center why-visual reveal">
-            <div className="w-full max-w-[400px]">
-              <ProductArt tone="soap" cursorLabel="Explore" />
+            <div className="w-full max-w-[400px] relative aspect-square rounded-[32px] overflow-hidden shadow-sm bg-warm-white">
+              <Image src="/images/Hair Care image.png" alt="Hair Care" fill className="object-cover hover:scale-105 transition-transform duration-700 ease-out" sizes="(max-width: 1024px) 100vw, 50vw" />
             </div>
           </div>
         </div>

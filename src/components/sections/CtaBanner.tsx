@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import ProductArt from '@/components/ui/ProductArt';
+import Image from 'next/image';
 
 export default function CtaBanner() {
   return (
@@ -29,8 +29,8 @@ export default function CtaBanner() {
             </div>
 
             <div className="flex justify-center">
-              <div className="w-full max-w-[320px]">
-                <ProductArt tone="soap" cursorLabel="View" />
+              <div className="w-full max-w-[320px] relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm">
+                <Image src="/images/Main Hero Section Image.png" alt="Build Your Cosmevo Routine" fill className="object-cover hover:scale-105 transition-transform duration-700 ease-out" sizes="(max-width: 1024px) 100vw, 50vw" />
               </div>
             </div>
           </div>
