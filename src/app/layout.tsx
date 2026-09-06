@@ -4,6 +4,7 @@ import './globals.css';
 import { ToastProvider } from '@/context/ToastContext';
 import { CartProvider } from '@/context/CartContext';
 import { ModalProvider } from '@/context/ModalContext';
+import { getAllProducts } from '@/lib/products';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/layout/CartDrawer';
@@ -25,16 +26,18 @@ export const metadata: Metadata = {
   description: 'Shop Cosmevo face care, hair care and cleansing products with delivery available across Pakistan.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const products = await getAllProducts();
+
   return (
     <html lang="en">
       <body className={`bg-warm-white text-ink font-manrope selection:bg-plum selection:text-white ${manrope.variable}`}>
         <ToastProvider>
-          <CartProvider>
+          <CartProvider initialProducts={products}>
             <ModalProvider>
               <ScrollProgress />
               <RevealInitializer />
