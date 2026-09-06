@@ -13,7 +13,7 @@ function getFakeCardStats(productId: string | number) {
     ? productId.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
     : Number(productId);
   const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-  const baseReviews = 500 + (seed % 1001);
+  const baseReviews = 400 + (seed % 1301); // 400-1700
   const reviewCount = baseReviews + daysSinceEpoch * 5;
   const avgRating = 4.4 + (seed % 7) * 0.1; // 4.4 – 5.0
   return { reviewCount, avgRating: Math.min(5.0, avgRating) };

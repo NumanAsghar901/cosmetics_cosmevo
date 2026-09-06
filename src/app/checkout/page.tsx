@@ -154,7 +154,7 @@ export default function CheckoutPage() {
           </div>
 
           <p className="text-sm text-text-secondary mb-8 leading-relaxed">
-            Our support team will contact you on WhatsApp or phone within 24 hours to confirm your delivery and share payment account details.
+            Please make the payment using your selected method and <strong className="text-ink">send a screenshot of the payment to our WhatsApp</strong> to confirm your order. Our support team will process it immediately!
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
@@ -339,9 +339,16 @@ export default function CheckoutPage() {
                   />
                   <div>
                     <span className="text-sm font-bold text-ink block">Bank Transfer</span>
-                    <span className="text-xs text-text-secondary block mt-0.5">
-                      Account details are shared via WhatsApp once your order is confirmed.
-                    </span>
+                    {formData.payment === 'bank' && (
+                      <div className="text-xs text-text-secondary mt-2 bg-white p-3 rounded-xl border border-border-subtle space-y-1">
+                        <div><strong>Bank:</strong> Meezan Bank</div>
+                        <div><strong>Title:</strong> COSMEVO COSMECEUTICALS</div>
+                        <div><strong>A/C:</strong> 02440102489293</div>
+                        <div><strong>IBAN:</strong> PK02MEZN0002440102489293</div>
+                        <div><strong>Branch:</strong> MUSTAFA ABAD BR-LAHORE</div>
+                        <div className="text-plum font-semibold mt-2">Please send the payment screenshot on WhatsApp to confirm your order.</div>
+                      </div>
+                    )}
                   </div>
                 </label>
 
@@ -361,9 +368,13 @@ export default function CheckoutPage() {
                   />
                   <div>
                     <span className="text-sm font-bold text-ink block">JazzCash</span>
-                    <span className="text-xs text-text-secondary block mt-0.5">
-                      JazzCash wallet number sent to your WhatsApp after ordering.
-                    </span>
+                    {formData.payment === 'jazzcash' && (
+                      <div className="text-xs text-text-secondary mt-2 bg-white p-3 rounded-xl border border-border-subtle space-y-1">
+                        <div><strong>Account No:</strong> 0321 4152626</div>
+                        <div><strong>Name:</strong> MUHAMMAD AURANGZAIB</div>
+                        <div className="text-plum font-semibold mt-2">Please send the payment screenshot on WhatsApp to confirm your order.</div>
+                      </div>
+                    )}
                   </div>
                 </label>
 
@@ -383,9 +394,13 @@ export default function CheckoutPage() {
                   />
                   <div>
                     <span className="text-sm font-bold text-ink block">EasyPaisa</span>
-                    <span className="text-xs text-text-secondary block mt-0.5">
-                      EasyPaisa mobile transfer instructions provided via WhatsApp.
-                    </span>
+                    {formData.payment === 'easypaisa' && (
+                      <div className="text-xs text-text-secondary mt-2 bg-white p-3 rounded-xl border border-border-subtle space-y-1">
+                        <div><strong>Account No:</strong> 0321 4152626</div>
+                        <div><strong>Name:</strong> MUHAMMAD AURANGZAIB</div>
+                        <div className="text-plum font-semibold mt-2">Please send the payment screenshot on WhatsApp to confirm your order.</div>
+                      </div>
+                    )}
                   </div>
                 </label>
               </div>
