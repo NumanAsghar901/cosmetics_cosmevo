@@ -1,0 +1,159 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
+import { Order } from '@/lib/types';
+import { Eye, Clock, Trash2, AlertTriangle } from 'lucide-react';
+
+export default function AdminOrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isClearing, setIsClearing] = useState(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  async function fetchOrders() {
+    setIsLoading(true);
+    try {
+      const { data } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (data) {
+        setOrders(data as Order[]);
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const getStatusColor = (status: string | undefined) => {
+    switch (status) {
+      case 'delivered': return 'bg-green-100 text-green-700';
+      case 'confirmed': return 'bg-blue-100 text-blue-700';
+      case 'shipped': return 'bg-purple-100 text-purple-700';
+      case 'cancelled': return 'bg-red-100 text-red-700';
+      default: return 'bg-yellow-100 text-yellow-700'; // pending
+    }
+  };
+
+  const handleClearHistory = async () => {
+    if (!window.confirm("WARNING: Are you sure you want to permanently delete all orders? This action cannot be undone and will erase all order history.")) {
+      return;
+    }
+
+    setIsClearing(true);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Dummy condition to delete all rows
+
+      if (error) throw error;
+      
+      // Refresh the orders list (which should be empty now)
+      setOrders([]);
+      alert("All orders history has been cleared successfully.");
+    } catch (error: any) {
+      console.error('Error clearing history:', error);
+      alert("Failed to clear history: " + error.message);
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-ink">Orders Management</h1>
+          <p className="text-ink/60 mt-1">View and process customer orders.</p>
+        </div>
+        <button
+          onClick={handleClearHistory}
+          disabled={isClearing || orders.length === 0}
+          className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition-colors disabled:opacity-50"
+        >
+          {isClearing ? <AlertTriangle size={18} className="animate-pulse" /> : <Trash2 size={18} />}
+          {isClearing ? 'Clearing...' : 'Clear All History'}
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-border-subtle shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-warm-white/50 text-ink/70">
+              <tr>
+                <th className="px-6 py-4 font-medium">Order Ref</th>
+                <th className="px-6 py-4 font-medium">Customer</th>
+                <th className="px-6 py-4 font-medium">Date</th>
+                <th className="px-6 py-4 font-medium">Status</th>
+                <th className="px-6 py-4 font-medium">Total</th>
+                <th className="px-6 py-4 font-medium text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-subtle">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-ink/50">
+                    Loading orders...
+                  </td>
+                </tr>
+              ) : orders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-ink/50 flex flex-col items-center justify-center gap-2">
+                    <Clock size={24} className="text-ink/30" />
+                    No orders received yet.
+                  </td>
+                </tr>
+              ) : (
+                orders.map((order) => (
+                  <tr key={order.id} className="hover:bg-warm-white/30 transition-colors">
+                    <td className="px-6 py-4 font-semibold text-ink">#{order.reference}</td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="font-medium text-ink">{order.customer_name}</p>
+                        <p className="text-xs text-ink/50">{order.customer_phone}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {new Date(order.created_at || '').toLocaleDateString('en-PK', {
+                        year: 'numeric', month: 'short', day: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                      })}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${getStatusColor(order.status)}`}>
+                        {order.status || 'pending'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 font-bold text-plum">
+                      Rs. {order.total.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end">
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          className="bg-cream text-ink px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-plum hover:text-white transition-colors flex items-center gap-2"
+                        >
+                          <Eye size={16} /> View
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

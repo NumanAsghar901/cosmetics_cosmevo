@@ -57,7 +57,8 @@ export default function ProductCard({ product }: ProductCardProps) {
           tone={tone}
           featured={product.featured}
           showQuickAdd={true}
-          imageUrl={product.image_url}
+          imageUrl={product.image_url ? product.image_url.split(',')[0].trim() : undefined}
+          hoverImageUrl={product.image_url && product.image_url.includes(',') ? product.image_url.split(',')[1].trim() : undefined}
           cursorLabel="View"
         />
       </div>

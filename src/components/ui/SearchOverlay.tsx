@@ -91,7 +91,7 @@ export default function SearchOverlay() {
                   <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden">
                     <ProductArt
                       tone={tone}
-                      imageUrl={p.image_url}
+                      imageUrl={p.image_url ? p.image_url.split(',')[0].trim() : undefined}
                       enableTilt={false}
                       className="w-full h-full rounded-lg"
                     />

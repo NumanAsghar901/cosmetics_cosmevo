@@ -31,6 +31,7 @@ interface Props {
 
 export default function ProductDetailClient({ product, related }: Props) {
   const [qty, setQty] = useState(1);
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [activeTab, setActiveTab] = useState<'benefits' | 'how' | 'caution'>('benefits');
   const [showStickyBar, setShowStickyBar] = useState(false);
   const mainBtnRef = useRef<HTMLButtonElement>(null);
@@ -82,15 +83,32 @@ export default function ProductDetailClient({ product, related }: Props) {
         {/* PDP Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
           {/* Visual Gallery Left */}
-          <div className="w-full max-w-[500px] mx-auto lg:max-w-none">
+          <div className="w-full max-w-[500px] mx-auto lg:max-w-none flex flex-col gap-4">
             <div className="bg-cream rounded-[24px] p-6 sm:p-10 shadow-xs">
               <ProductArt
                 tone={tone}
                 featured={product.featured}
-                imageUrl={product.image_url}
+                imageUrl={product.image_url ? product.image_url.split(',')[activeImageIdx].trim() : undefined}
                 className="w-full max-w-[420px] mx-auto shadow-sm"
               />
             </div>
+            
+            {/* Image Thumbnails */}
+            {product.image_url && product.image_url.includes(',') && (
+              <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                {product.image_url.split(',').map((url, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImageIdx(idx)}
+                    className={`w-16 h-16 shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
+                      activeImageIdx === idx ? 'border-plum scale-105' : 'border-transparent opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={url.trim()} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Details Right */}

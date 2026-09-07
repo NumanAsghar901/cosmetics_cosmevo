@@ -74,9 +74,9 @@ export default function CartDrawer() {
                   <div className="w-[74px] h-[74px] shrink-0 rounded-xl overflow-hidden">
                     <ProductArt
                       tone={tone}
-                      imageUrl={p.image_url}
+                      imageUrl={p.image_url ? p.image_url.split(',')[0].trim() : undefined}
                       enableTilt={false}
-                      className="w-full h-full rounded-xl"
+                      className="w-full h-full rounded-lg"
                     />
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-between">

@@ -8,6 +8,7 @@ interface ProductArtProps {
   featured?: boolean;
   showQuickAdd?: boolean;
   imageUrl?: string;
+  hoverImageUrl?: string;
   className?: string;
   enableTilt?: boolean;
   cursorLabel?: string;
@@ -18,6 +19,7 @@ export default function ProductArt({
   featured = false,
   showQuickAdd = false,
   imageUrl,
+  hoverImageUrl,
   className = '',
   enableTilt = true,
   cursorLabel = 'View',
@@ -63,9 +65,18 @@ export default function ProductArt({
             src={imageUrl}
             alt="Product art"
             fill
-            className="object-cover"
+            className={`object-cover transition-opacity duration-500 ease-in-out ${hoverImageUrl ? 'group-hover:opacity-0' : ''}`}
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 300px"
           />
+          {hoverImageUrl && (
+            <Image
+              src={hoverImageUrl}
+              alt="Product art hover"
+              fill
+              className="object-cover transition-opacity duration-500 ease-in-out opacity-0 group-hover:opacity-100"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 300px"
+            />
+          )}
         </div>
       ) : (
         <>

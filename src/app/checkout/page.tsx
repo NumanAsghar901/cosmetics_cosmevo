@@ -75,7 +75,7 @@ export default function CheckoutPage() {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('orders').insert([
+        const { error } = await supabase.from('orders').insert([
           {
             reference: ref,
             customer_name: formData.fullName,
@@ -85,13 +85,18 @@ export default function CheckoutPage() {
             notes: formData.notes,
             items: orderItems,
             subtotal: cartSubtotal,
-            total: cartSubtotal,
+            total: cartSubtotal + (isDeliveryFree ? 0 : 200),
             payment_method: formData.payment,
             status: 'pending',
           },
         ]);
-      } catch {
-        // graceful offline fallback
+        if (error) {
+          console.error("Supabase insert error:", error);
+          alert("Order failed to save: " + error.message);
+        }
+      } catch (err) {
+        console.error("Try-catch error inserting order:", err);
+        alert("Unexpected error placing order. Check console.");
       }
     }
 
@@ -467,7 +472,7 @@ export default function CheckoutPage() {
                     <div className="w-14 h-14 shrink-0 rounded-lg overflow-hidden">
                       <ProductArt
                         tone={tone}
-                        imageUrl={p.image_url}
+                        imageUrl={p.image_url ? p.image_url.split(',')[0].trim() : undefined}
                         enableTilt={false}
                         className="w-full h-full rounded-lg"
                       />

@@ -54,7 +54,7 @@ export default function QuickViewModal() {
               <ProductArt
                 tone={tone}
                 featured={quickViewProduct.featured}
-                imageUrl={quickViewProduct.image_url}
+                imageUrl={quickViewProduct.image_url ? quickViewProduct.image_url.split(',')[0].trim() : undefined}
                 className="w-full"
               />
             </div>
