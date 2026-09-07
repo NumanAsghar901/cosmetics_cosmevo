@@ -3,7 +3,7 @@ import { Concern, Category } from './types';
 export const FREE_DELIVERY_THRESHOLD = 2000;
 export const WA_NUMBER = '923094560316';
 export const WA_DISPLAY = '0309 4560316';
-export const SUPPORT_EMAIL = 'support@cosmevo.pk';
+export const SUPPORT_EMAIL = 'info@cosmevo.pk';
 export const LOCATION_DISPLAY = 'Faisalabad, Pakistan';
 
 export const CATEGORIES: Category[] = [

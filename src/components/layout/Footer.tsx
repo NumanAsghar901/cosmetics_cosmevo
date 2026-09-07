@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { WA_DISPLAY, SUPPORT_EMAIL, LOCATION_DISPLAY } from '@/lib/constants';
+import { WA_DISPLAY, SUPPORT_EMAIL } from '@/lib/constants';
 import { getWhatsAppUrl } from '@/lib/utils';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useToast } from '@/context/ToastContext';
@@ -136,7 +136,9 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-white/10 pt-6 text-[12.5px] flex flex-wrap justify-between gap-3 text-white/50">
           <span>&copy; {new Date().getFullYear()} Cosmevo Cosmeceuticals. All rights reserved.</span>
-          <span>{LOCATION_DISPLAY}</span>
+          <a href="https://propfirmstudios.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+            Design & Developed by Prop Firm Studios
+          </a>
         </div>
       </div>
     </footer>
