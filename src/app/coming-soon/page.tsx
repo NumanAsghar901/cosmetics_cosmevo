@@ -11,6 +11,9 @@ export const metadata = {
   description: 'Preview upcoming dermatological skincare and haircare formulas currently in development at Cosmevo. Explore full ingredients and active benefits before official launch.',
 };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ComingSoonPage() {
   const allProducts = await getAllProducts();
   const comingSoonProducts = allProducts.filter((p) => Boolean(p.is_coming_soon));

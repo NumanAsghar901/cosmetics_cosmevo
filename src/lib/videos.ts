@@ -1,9 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { ShowcaseVideo } from './types';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './constants';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: false },
+  global: {
+    fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' }),
+  },
+});
 
 export const FALLBACK_SHOWCASE_VIDEOS: ShowcaseVideo[] = [
   {
@@ -57,8 +61,6 @@ export const FALLBACK_SHOWCASE_VIDEOS: ShowcaseVideo[] = [
 ];
 
 export async function getAllActiveVideos(): Promise<ShowcaseVideo[]> {
-  if (!supabaseUrl || !supabaseKey) return FALLBACK_SHOWCASE_VIDEOS;
-
   try {
     const { data, error } = await supabase
       .from('videos')
@@ -80,8 +82,6 @@ export async function getAllActiveVideos(): Promise<ShowcaseVideo[]> {
 }
 
 export async function getAllAdminVideos(): Promise<ShowcaseVideo[]> {
-  if (!supabaseUrl || !supabaseKey) return FALLBACK_SHOWCASE_VIDEOS;
-
   try {
     const { data, error } = await supabase
       .from('videos')

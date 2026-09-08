@@ -27,6 +27,9 @@ export const metadata: Metadata = {
   description: 'Shop Cosmevo face care, hair care and cleansing products with delivery available across Pakistan.',
 };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function RootLayout({
   children,
 }: {

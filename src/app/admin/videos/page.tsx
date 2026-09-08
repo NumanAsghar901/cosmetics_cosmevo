@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { ShowcaseVideo, Product } from '@/lib/types';
 import { FALLBACK_SHOWCASE_VIDEOS } from '@/lib/videos';
+import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from '@/lib/constants';
 import { 
   Film, Plus, Edit2, Trash2, Check, X, AlertCircle, 
   UploadCloud, Loader2, Play, Pause, ExternalLink, Link as LinkIcon 
@@ -116,7 +117,41 @@ export default function AdminVideosPage() {
     setIsUploadingVideo(true);
     setFormError(null);
 
+    const cName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || CLOUDINARY_CLOUD_NAME;
+    const uPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || CLOUDINARY_UPLOAD_PRESET;
+
     try {
+      // 1. Direct Cloudinary upload (permanent global CDN, works on Vercel & bypasses serverless limits)
+      if (cName && uPreset) {
+        try {
+          const cFd = new FormData();
+          cFd.append('file', file);
+          cFd.append('upload_preset', uPreset);
+
+          const cRes = await fetch(`https://api.cloudinary.com/v1_1/${cName}/video/upload`, {
+            method: 'POST',
+            body: cFd,
+          });
+
+          if (cRes.ok) {
+            const cData = await cRes.json();
+            if (cData.secure_url || cData.url) {
+              setForm((prev) => ({
+                ...prev,
+                video_url: cData.secure_url || cData.url,
+                thumbnail_url: prev.thumbnail_url || (cData.secure_url ? cData.secure_url.replace(/\.[^/.]+$/, ".jpg") : ''),
+              }));
+              setIsUploadingVideo(false);
+              if (videoFileInputRef.current) videoFileInputRef.current.value = '';
+              return;
+            }
+          }
+        } catch (cErr) {
+          console.warn('Cloudinary upload deferred, trying local handler:', cErr);
+        }
+      }
+
+      // 2. Fallback to /api/upload/video
       const fd = new FormData();
       fd.append('file', file);
 
@@ -139,7 +174,7 @@ export default function AdminVideosPage() {
       }
     } catch (err: any) {
       console.error('Video upload error:', err);
-      setFormError(err.message || 'Video upload failed. You can paste a direct video URL instead.');
+      setFormError(err.message || 'Video upload failed. Please try again.');
     } finally {
       setIsUploadingVideo(false);
       if (videoFileInputRef.current) videoFileInputRef.current.value = '';
@@ -153,7 +188,38 @@ export default function AdminVideosPage() {
     setIsUploadingThumb(true);
     setFormError(null);
 
+    const cName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || CLOUDINARY_CLOUD_NAME;
+    const uPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || CLOUDINARY_UPLOAD_PRESET;
+
     try {
+      if (cName && uPreset) {
+        try {
+          const cFd = new FormData();
+          cFd.append('file', file);
+          cFd.append('upload_preset', uPreset);
+
+          const cRes = await fetch(`https://api.cloudinary.com/v1_1/${cName}/image/upload`, {
+            method: 'POST',
+            body: cFd,
+          });
+
+          if (cRes.ok) {
+            const cData = await cRes.json();
+            if (cData.secure_url || cData.url) {
+              setForm((prev) => ({
+                ...prev,
+                thumbnail_url: cData.secure_url || cData.url,
+              }));
+              setIsUploadingThumb(false);
+              if (thumbFileInputRef.current) thumbFileInputRef.current.value = '';
+              return;
+            }
+          }
+        } catch (cErr) {
+          console.warn('Cloudinary image upload deferred, trying local:', cErr);
+        }
+      }
+
       const fd = new FormData();
       fd.append('file', file);
 
@@ -176,7 +242,7 @@ export default function AdminVideosPage() {
       }
     } catch (err: any) {
       console.error('Thumbnail upload error:', err);
-      setFormError(err.message || 'Thumbnail upload failed. You can paste an image URL.');
+      setFormError(err.message || 'Thumbnail upload failed.');
     } finally {
       setIsUploadingThumb(false);
       if (thumbFileInputRef.current) thumbFileInputRef.current.value = '';

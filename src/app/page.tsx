@@ -4,6 +4,9 @@ import { getAllCategories, getAllSubcategories } from '@/lib/categories';
 import { getAllActiveVideos } from '@/lib/videos';
 import HomeClient from './HomeClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function HomePage() {
   const products = await getAllProducts();
   const categories = await getAllCategories();
