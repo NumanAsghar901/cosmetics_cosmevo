@@ -3,9 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 import { sendOrderStatusEmail } from '@/lib/email';
 import { Order } from '@/lib/types';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/constants';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || SUPABASE_URL;
 // Use service role key to bypass RLS if available, otherwise fallback to anon key
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(req: Request) {

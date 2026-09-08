@@ -8,6 +8,7 @@ export const LOCATION_DISPLAY = 'Faisalabad, Pakistan';
 
 export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zjfdehrctocdvmpczknj.supabase.co';
 export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_xS_DqV5db2Vo7AzrnY9b7w_YFNtJcMD';
+export const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'info@cosmevo.pk';
 export const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'kj5rzhaj';
 export const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'cosmevo_products';
 

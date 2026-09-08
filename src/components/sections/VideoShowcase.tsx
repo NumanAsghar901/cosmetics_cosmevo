@@ -56,6 +56,8 @@ function VideoCard({
     }
   };
 
+  const posterUrl = video.thumbnail_url || (video.video_url?.includes('cloudinary.com') ? video.video_url.replace(/\.[^/.]+$/, '.jpg') : undefined);
+
   return (
     <div
       onMouseEnter={handleMouseEnter}
@@ -67,7 +69,7 @@ function VideoCard({
       <video
         ref={videoRef}
         src={video.video_url}
-        poster={video.thumbnail_url}
+        poster={posterUrl}
         playsInline
         loop
         muted

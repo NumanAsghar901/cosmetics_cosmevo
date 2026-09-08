@@ -133,25 +133,33 @@ export default function AdminVideosPage() {
             body: cFd,
           });
 
-          if (cRes.ok) {
-            const cData = await cRes.json();
-            if (cData.secure_url || cData.url) {
-              setForm((prev) => ({
-                ...prev,
-                video_url: cData.secure_url || cData.url,
-                thumbnail_url: prev.thumbnail_url || (cData.secure_url ? cData.secure_url.replace(/\.[^/.]+$/, ".jpg") : ''),
-              }));
-              setIsUploadingVideo(false);
-              if (videoFileInputRef.current) videoFileInputRef.current.value = '';
-              return;
+          const cData = await cRes.json().catch(() => ({}));
+
+          if (cRes.ok && (cData.secure_url || cData.url)) {
+            setForm((prev) => ({
+              ...prev,
+              video_url: cData.secure_url || cData.url,
+              thumbnail_url: prev.thumbnail_url || (cData.secure_url ? cData.secure_url.replace(/\.[^/.]+$/, ".jpg") : ''),
+            }));
+            setIsUploadingVideo(false);
+            if (videoFileInputRef.current) videoFileInputRef.current.value = '';
+            return;
+          } else {
+            const detail = cData?.error?.message || `HTTP status ${cRes.status}`;
+            console.error('Cloudinary video upload failed:', cData);
+            if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+              throw new Error(`Cloudinary upload failed: ${detail}`);
             }
           }
-        } catch (cErr) {
-          console.warn('Cloudinary upload deferred, trying local handler:', cErr);
+        } catch (cErr: any) {
+          if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+            throw cErr;
+          }
+          console.warn('Cloudinary upload deferred, trying local handler on localhost:', cErr);
         }
       }
 
-      // 2. Fallback to /api/upload/video
+      // 2. Fallback to /api/upload/video (only on localhost)
       const fd = new FormData();
       fd.append('file', file);
 
@@ -203,19 +211,27 @@ export default function AdminVideosPage() {
             body: cFd,
           });
 
-          if (cRes.ok) {
-            const cData = await cRes.json();
-            if (cData.secure_url || cData.url) {
-              setForm((prev) => ({
-                ...prev,
-                thumbnail_url: cData.secure_url || cData.url,
-              }));
-              setIsUploadingThumb(false);
-              if (thumbFileInputRef.current) thumbFileInputRef.current.value = '';
-              return;
+          const cData = await cRes.json().catch(() => ({}));
+
+          if (cRes.ok && (cData.secure_url || cData.url)) {
+            setForm((prev) => ({
+              ...prev,
+              thumbnail_url: cData.secure_url || cData.url,
+            }));
+            setIsUploadingThumb(false);
+            if (thumbFileInputRef.current) thumbFileInputRef.current.value = '';
+            return;
+          } else {
+            const detail = cData?.error?.message || `HTTP status ${cRes.status}`;
+            console.error('Cloudinary image upload failed:', cData);
+            if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+              throw new Error(`Cloudinary thumbnail upload failed: ${detail}`);
             }
           }
-        } catch (cErr) {
+        } catch (cErr: any) {
+          if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+            throw cErr;
+          }
           console.warn('Cloudinary image upload deferred, trying local:', cErr);
         }
       }
@@ -357,7 +373,11 @@ export default function AdminVideosPage() {
             })
             .eq('id', form.id);
 
-          if (!error) savedToDb = true;
+          if (error) {
+            console.error('Supabase video update error:', error);
+            throw new Error(`Database error: ${error.message}`);
+          }
+          savedToDb = true;
         } else {
           const { data: inserted, error } = await supabase
             .from('videos')
@@ -374,13 +394,21 @@ export default function AdminVideosPage() {
             }])
             .select();
 
-          if (!error && inserted && inserted[0]) {
+          if (error) {
+            console.error('Supabase video insert error:', error);
+            throw new Error(`Database error: ${error.message}`);
+          }
+
+          if (inserted && inserted[0]) {
             payload.id = inserted[0].id;
             savedToDb = true;
           }
         }
-      } catch (dbErr) {
-        console.warn('Could not save to Supabase DB, falling back to local sync:', dbErr);
+      } catch (dbErr: any) {
+        console.error('Could not save to Supabase DB:', dbErr);
+        setFormError(dbErr.message || 'Could not save video to database. Please check your connection.');
+        setIsSaving(false);
+        return;
       }
 
       // Sync to localStorage for local testing

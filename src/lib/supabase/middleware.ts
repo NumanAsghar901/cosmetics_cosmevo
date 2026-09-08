@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { SUPABASE_URL, SUPABASE_ANON_KEY, ADMIN_EMAIL } from '@/lib/constants'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -7,8 +8,8 @@ export async function updateSession(request: NextRequest) {
   })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL || SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
@@ -41,7 +42,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Verify admin email
-    const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '').split(',').map(e => e.trim())
+    const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || ADMIN_EMAIL).split(',').map(e => e.trim())
     if (!adminEmails.includes(user.email || '')) {
       const url = request.nextUrl.clone()
       url.pathname = '/'
@@ -51,7 +52,7 @@ export async function updateSession(request: NextRequest) {
 
   // If admin is logged in and tries to access /admin/login, redirect to /admin
   if (request.nextUrl.pathname === '/admin/login' && user) {
-    const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || '').split(',').map(e => e.trim())
+    const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || ADMIN_EMAIL).split(',').map(e => e.trim())
     if (adminEmails.includes(user.email || '')) {
       const url = request.nextUrl.clone()
       url.pathname = '/admin'

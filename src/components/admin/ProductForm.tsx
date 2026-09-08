@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Product, DbCategory, DbSubcategory } from '@/lib/types';
+import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from '@/lib/constants';
 import { ArrowLeft, Plus, X, UploadCloud, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -93,8 +94,8 @@ export default function ProductForm({ initialData, isEdit }: ProductFormProps) {
     setIsUploading(true);
     setError(null);
 
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || CLOUDINARY_UPLOAD_PRESET;
 
     if (!cloudName || !uploadPreset) {
       setError('Cloudinary configuration is missing in environment variables.');
