@@ -44,30 +44,7 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const handleClearHistory = async () => {
-    if (!window.confirm("WARNING: Are you sure you want to permanently delete all orders? This action cannot be undone and will erase all order history.")) {
-      return;
-    }
 
-    setIsClearing(true);
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Dummy condition to delete all rows
-
-      if (error) throw error;
-      
-      // Refresh the orders list (which should be empty now)
-      setOrders([]);
-      alert("All orders history has been cleared successfully.");
-    } catch (error: any) {
-      console.error('Error clearing history:', error);
-      alert("Failed to clear history: " + error.message);
-    } finally {
-      setIsClearing(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -76,14 +53,7 @@ export default function AdminOrdersPage() {
           <h1 className="text-2xl font-bold text-ink">Orders Management</h1>
           <p className="text-ink/60 mt-1">View and process customer orders.</p>
         </div>
-        <button
-          onClick={handleClearHistory}
-          disabled={isClearing || orders.length === 0}
-          className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition-colors disabled:opacity-50"
-        >
-          {isClearing ? <AlertTriangle size={18} className="animate-pulse" /> : <Trash2 size={18} />}
-          {isClearing ? 'Clearing...' : 'Clear All History'}
-        </button>
+
       </div>
 
       <div className="bg-white rounded-2xl border border-border-subtle shadow-sm overflow-hidden">
@@ -120,6 +90,9 @@ export default function AdminOrdersPage() {
                     <td className="px-6 py-4">
                       <div>
                         <p className="font-medium text-ink">{order.customer_name}</p>
+                        {order.customer_email && (
+                          <p className="text-xs text-ink/70">{order.customer_email}</p>
+                        )}
                         <p className="text-xs text-ink/50">{order.customer_phone}</p>
                       </div>
                     </td>

@@ -23,9 +23,7 @@ export function getCategoryLabel(category: string): string {
   }
 }
 
-export function genOrderRef(): string {
-  return 'COS-' + Math.floor(100000 + Math.random() * 899999);
-}
+
 
 export function getWhatsAppUrl(message: string): string {
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;

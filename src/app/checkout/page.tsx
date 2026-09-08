@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { FREE_DELIVERY_THRESHOLD } from '@/lib/constants';
-import { fmtPrice, genOrderRef, getToneFor, getWhatsAppUrl } from '@/lib/utils';
+import { fmtPrice, getToneFor, getWhatsAppUrl } from '@/lib/utils';
 import { getProductById } from '@/lib/products';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import ProductArt from '@/components/ui/ProductArt';
@@ -62,7 +62,6 @@ export default function CheckoutPage() {
 
     setIsSubmitting(true);
 
-    const ref = genOrderRef();
     const orderItems = cart.map((c) => {
       const p = getProductById(c.id, products);
       return {
@@ -73,45 +72,47 @@ export default function CheckoutPage() {
       };
     });
 
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { error } = await supabase.from('orders').insert([
-          {
-            reference: ref,
-            customer_name: formData.fullName,
-            customer_email: formData.email,
-            customer_phone: formData.phone,
-            customer_address: `${formData.address}, ${formData.city}`,
-            notes: formData.notes,
-            items: orderItems,
-            subtotal: cartSubtotal,
-            total: cartSubtotal + (isDeliveryFree ? 0 : 200),
-            payment_method: formData.payment,
-            status: 'pending',
-          },
-        ]);
-        if (error) {
-          console.error("Supabase insert error:", error);
-          alert("Order failed to save: " + error.message);
-        }
-      } catch (err) {
-        console.error("Try-catch error inserting order:", err);
-        alert("Unexpected error placing order. Check console.");
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customer_name: formData.fullName,
+          customer_email: formData.email,
+          customer_phone: formData.phone,
+          customer_address: `${formData.address}, ${formData.city}`,
+          notes: formData.notes,
+          items: orderItems,
+          subtotal: cartSubtotal,
+          total: cartSubtotal + (isDeliveryFree ? 0 : 200),
+          payment_method: formData.payment,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        setCompletedOrder({
+          reference: result.order.reference,
+          fullName: formData.fullName,
+          phone: formData.phone,
+          city: formData.city,
+          payment: formData.payment,
+          subtotal: cartSubtotal,
+          deliveryFree: isDeliveryFree,
+        });
+        clearCart();
+      } else {
+        throw new Error(result.error || 'Failed to place order');
       }
+    } catch (err: any) {
+      console.error("Try-catch error inserting order:", err);
+      alert("Unexpected error placing order: " + err.message);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setCompletedOrder({
-      reference: ref,
-      fullName: formData.fullName,
-      phone: formData.phone,
-      city: formData.city,
-      payment: formData.payment,
-      subtotal: cartSubtotal,
-      deliveryFree: isDeliveryFree,
-    });
-
-    clearCart();
-    setIsSubmitting(false);
   };
 
   if (completedOrder) {

@@ -42,16 +42,27 @@ export default function OrderDetailsPage() {
     if (!order) return;
     setIsUpdating(true);
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', order.id);
+      const res = await fetch('/api/orders/status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          newStatus: newStatus,
+        }),
+      });
+
+      const result = await res.json();
       
-      if (error) throw error;
-      setOrder({ ...order, status: newStatus as any });
-    } catch (error) {
+      if (res.ok && result.success) {
+        setOrder({ ...order, status: newStatus as any });
+      } else {
+        throw new Error(result.error || 'Failed to update order status');
+      }
+    } catch (error: any) {
       console.error('Error updating status:', error);
-      alert('Failed to update order status.');
+      alert('Failed to update order status: ' + error.message);
     } finally {
       setIsUpdating(false);
     }
