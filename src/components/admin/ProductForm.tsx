@@ -35,6 +35,7 @@ export default function ProductForm({ initialData, isEdit }: ProductFormProps) {
     caution: initialData?.caution || '',
     concerns: initialData?.concerns || [],
     featured: initialData?.featured || false,
+    is_coming_soon: initialData?.is_coming_soon || false,
     image_url: initialData?.image_url || '',
   });
 
@@ -152,17 +153,39 @@ export default function ProductForm({ initialData, isEdit }: ProductFormProps) {
         how_to_use: formData.how_to_use?.filter(h => h.trim() !== ''),
       };
 
+      let saveError: any = null;
       if (isEdit && initialData?.id) {
         const { error } = await supabase
           .from('products')
           .update(cleanedData)
           .eq('id', initialData.id);
-        if (error) throw error;
+        saveError = error;
       } else {
         const { error } = await supabase
           .from('products')
           .insert([cleanedData]);
-        if (error) throw error;
+        saveError = error;
+      }
+
+      if (saveError) {
+        if (saveError.message?.includes('is_coming_soon')) {
+          console.warn('is_coming_soon column missing in DB, retrying without it:', saveError.message);
+          const { is_coming_soon, ...legacyData } = cleanedData as any;
+          if (isEdit && initialData?.id) {
+            const { error: retryErr } = await supabase
+              .from('products')
+              .update(legacyData)
+              .eq('id', initialData.id);
+            if (retryErr) throw retryErr;
+          } else {
+            const { error: retryErr } = await supabase
+              .from('products')
+              .insert([legacyData]);
+            if (retryErr) throw retryErr;
+          }
+        } else {
+          throw saveError;
+        }
       }
 
       router.push('/admin/products');
@@ -323,17 +346,35 @@ export default function ProductForm({ initialData, isEdit }: ProductFormProps) {
                 />
               </label>
             </div>
-            <div className="md:col-span-2 flex items-center gap-3 pt-4">
-              <input
-                type="checkbox"
-                id="featured"
-                checked={formData.featured}
-                onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-                className="w-5 h-5 text-plum rounded focus:ring-plum"
-              />
-              <label htmlFor="featured" className="text-sm font-medium text-ink cursor-pointer">
-                Feature on Homepage
-              </label>
+            <div className="md:col-span-2 flex flex-wrap items-center gap-6 pt-4 border-t border-border-subtle mt-2">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="featured"
+                  checked={formData.featured}
+                  onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                  className="w-5 h-5 text-plum rounded focus:ring-plum accent-plum"
+                />
+                <label htmlFor="featured" className="text-sm font-medium text-ink cursor-pointer">
+                  Feature on Homepage
+                </label>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="is_coming_soon"
+                  checked={formData.is_coming_soon}
+                  onChange={(e) => setFormData({ ...formData, is_coming_soon: e.target.checked })}
+                  className="w-5 h-5 text-amber-600 rounded focus:ring-amber-500 accent-amber-600"
+                />
+                <label htmlFor="is_coming_soon" className="text-sm font-medium text-ink cursor-pointer flex items-center gap-2">
+                  <span>Feature on COMING SOON</span>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 uppercase tracking-wider">
+                    Coming Soon
+                  </span>
+                </label>
+              </div>
             </div>
           </div>
         </div>

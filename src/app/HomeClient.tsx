@@ -3,15 +3,26 @@
 import React, { useState, useMemo } from 'react';
 import Hero from '@/components/sections/Hero';
 import Marquee from '@/components/sections/Marquee';
+import VideoShowcase from '@/components/sections/VideoShowcase';
 import WhyCosmevo from '@/components/sections/WhyCosmevo';
 import FaqAccordion from '@/components/sections/FaqAccordion';
 import CtaBanner from '@/components/sections/CtaBanner';
 import FilterPills from '@/components/ui/FilterPills';
 import ConcernChips from '@/components/ui/ConcernChips';
 import ProductCard from '@/components/ui/ProductCard';
-import { Product, DbCategory, DbSubcategory } from '@/lib/types';
+import { Product, DbCategory, DbSubcategory, ShowcaseVideo } from '@/lib/types';
 
-export default function HomeClient({ initialProducts, categories, subcategories }: { initialProducts: Product[], categories: DbCategory[], subcategories: DbSubcategory[] }) {
+export default function HomeClient({ 
+  initialProducts, 
+  categories, 
+  subcategories,
+  videos = []
+}: { 
+  initialProducts: Product[]; 
+  categories: DbCategory[]; 
+  subcategories: DbSubcategory[];
+  videos?: ShowcaseVideo[];
+}) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedConcern, setSelectedConcern] = useState<string | null>(null);
 
@@ -93,13 +104,16 @@ export default function HomeClient({ initialProducts, categories, subcategories 
         </div>
       </section>
 
-      {/* 4. WHY COSMEVO */}
+      {/* 4. VIDEO SHOWCASE & REELS */}
+      <VideoShowcase videos={videos} />
+
+      {/* 5. WHY COSMEVO */}
       <WhyCosmevo />
 
-      {/* 5. FAQ ACCORDION */}
+      {/* 6. FAQ ACCORDION */}
       <FaqAccordion />
 
-      {/* 6. CONVERSION CTA BANNER */}
+      {/* 7. CONVERSION CTA BANNER */}
       <CtaBanner />
     </div>
   );

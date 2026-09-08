@@ -6,6 +6,7 @@ import Image from 'next/image';
 interface ProductArtProps {
   tone?: 'face' | 'hair' | 'soap' | string;
   featured?: boolean;
+  comingSoon?: boolean;
   showQuickAdd?: boolean;
   imageUrl?: string;
   hoverImageUrl?: string;
@@ -17,6 +18,7 @@ interface ProductArtProps {
 export default function ProductArt({
   tone = 'face',
   featured = false,
+  comingSoon = false,
   showQuickAdd = false,
   imageUrl,
   hoverImageUrl,
@@ -55,8 +57,14 @@ export default function ProductArt({
         isTilting ? 'tilting' : ''
       } ${className}`}
     >
-      {/* Featured Badge */}
-      {featured && <span className="art-badge">Featured</span>}
+      {/* Featured or Coming Soon Badge */}
+      {comingSoon ? (
+        <span className="art-badge !bg-amber-600 !text-white !border-amber-500 font-bold uppercase tracking-wider text-[10px]">
+          Coming Soon
+        </span>
+      ) : featured ? (
+        <span className="art-badge">Featured</span>
+      ) : null}
 
       {/* Real product image if provided */}
       {imageUrl ? (

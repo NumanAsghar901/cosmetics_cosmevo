@@ -10,7 +10,7 @@ export default function Marquee() {
     '✦',
     'Soaps',
     '✦',
-    'Free Delivery Above Rs. 2,000',
+    'Free Delivery Above Rs. 2,500',
     '✦',
     'Delivery Across Pakistan',
     '✦',

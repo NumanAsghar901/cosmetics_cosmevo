@@ -72,7 +72,7 @@ export default function AdminProductsPage() {
                 <th className="px-6 py-4 font-medium">Product</th>
                 <th className="px-6 py-4 font-medium">Category</th>
                 <th className="px-6 py-4 font-medium">Price</th>
-                <th className="px-6 py-4 font-medium">Featured</th>
+                <th className="px-6 py-4 font-medium">Featured / Flags</th>
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
@@ -117,11 +117,21 @@ export default function AdminProductsPage() {
                       Rs. {product.price}
                     </td>
                     <td className="px-6 py-4">
-                      {product.featured ? (
-                        <span className="text-plum bg-plum/10 px-2 py-1 rounded text-xs font-bold">Yes</span>
-                      ) : (
-                        <span className="text-ink/40 text-xs font-medium">No</span>
-                      )}
+                      <div className="flex flex-wrap gap-1 items-center">
+                        {product.featured && (
+                          <span className="text-plum bg-plum/10 border border-plum/20 px-2 py-0.5 rounded text-[11px] font-bold">
+                            Homepage
+                          </span>
+                        )}
+                        {product.is_coming_soon && (
+                          <span className="text-amber-800 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded text-[11px] font-bold">
+                            Coming Soon
+                          </span>
+                        )}
+                        {!product.featured && !product.is_coming_soon && (
+                          <span className="text-ink/40 text-xs font-medium">—</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">

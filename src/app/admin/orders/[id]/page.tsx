@@ -160,9 +160,23 @@ export default function OrderDetailsPage() {
                   <span>Subtotal</span>
                   <span>Rs. {order.subtotal.toLocaleString()}</span>
                 </div>
+                {Boolean(order.discount_amount && order.discount_amount > 0) && (
+                  <div className="flex justify-between text-sm text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg font-medium">
+                    <span>Coupon Discount {order.coupon_code ? `(${order.coupon_code})` : ''}</span>
+                    <span>-Rs. {order.discount_amount?.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm text-ink/70">
-                  <span>Delivery Fee</span>
-                  <span>{order.total > order.subtotal ? `Rs. ${(order.total - order.subtotal).toLocaleString()}` : 'Free'}</span>
+                  <span>Delivery Fee {order.province ? `(${order.province})` : ''}</span>
+                  <span className="font-medium">
+                    {order.shipping_fee !== undefined && order.shipping_fee !== null
+                      ? order.shipping_fee > 0
+                        ? `Rs. ${order.shipping_fee.toLocaleString()}`
+                        : 'Free'
+                      : order.total > order.subtotal
+                      ? `Rs. ${(order.total - order.subtotal).toLocaleString()}`
+                      : 'Free'}
+                  </span>
                 </div>
                 <div className="flex justify-between text-lg font-bold text-ink pt-2 border-t border-border-subtle">
                   <span>Total</span>
@@ -205,10 +219,18 @@ export default function OrderDetailsPage() {
               <MapPin size={20} className="text-plum" />
               <h2 className="text-lg font-semibold text-ink">Delivery Address</h2>
             </div>
-            <div className="p-6">
+            <div className="p-6 space-y-2">
               <p className="text-sm text-ink/70 leading-relaxed">
                 {order.customer_address}
               </p>
+              {order.province && (
+                <div className="pt-2 border-t border-border-subtle flex items-center justify-between text-xs">
+                  <span className="text-text-secondary font-medium">Province:</span>
+                  <span className="font-bold text-ink px-2 py-0.5 rounded bg-cream border border-border-subtle">
+                    {order.province}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

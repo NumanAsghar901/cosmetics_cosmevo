@@ -54,6 +54,7 @@ export default function QuickViewModal() {
               <ProductArt
                 tone={tone}
                 featured={quickViewProduct.featured}
+                comingSoon={quickViewProduct.is_coming_soon}
                 imageUrl={quickViewProduct.image_url ? quickViewProduct.image_url.split(',')[0].trim() : undefined}
                 className="w-full"
               />
@@ -62,10 +63,17 @@ export default function QuickViewModal() {
 
           {/* Details Column */}
           <div className="p-6 sm:p-8 flex flex-col justify-center">
-            <span className="text-[11px] font-bold tracking-wider uppercase text-plum-muted">
-              {quickViewProduct.family}
-            </span>
-            <h3 className="text-xl sm:text-2xl font-extrabold text-ink mt-1.5 mb-2 tracking-tight">
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <span className="text-[11px] font-bold tracking-wider uppercase text-plum-muted">
+                {quickViewProduct.family}
+              </span>
+              {quickViewProduct.is_coming_soon && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 uppercase">
+                  Coming Soon
+                </span>
+              )}
+            </div>
+            <h3 className="text-xl sm:text-2xl font-extrabold text-ink mb-2 tracking-tight">
               {quickViewProduct.name}
             </h3>
             <p className="text-sm text-text-secondary mb-3 leading-relaxed">
@@ -94,14 +102,16 @@ export default function QuickViewModal() {
 
             {/* Actions */}
             <div className="flex flex-wrap gap-2.5 mt-auto pt-4 border-t border-border-subtle">
-              <button
-                type="button"
-                data-cursor="Add"
-                onClick={handleAddToCart}
-                className="btn btn-primary magnetic"
-              >
-                Add to Cart
-              </button>
+              {!quickViewProduct.is_coming_soon && (
+                <button
+                  type="button"
+                  data-cursor="Add"
+                  onClick={handleAddToCart}
+                  className="btn btn-primary magnetic"
+                >
+                  Add to Cart
+                </button>
+              )}
               <Link
                 href={`/product/${quickViewProduct.slug}`}
                 onClick={closeQuickView}

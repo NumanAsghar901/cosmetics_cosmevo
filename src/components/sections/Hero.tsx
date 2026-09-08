@@ -90,7 +90,7 @@ export default function Hero({ onQuickCategory }: HeroProps) {
         {/* Trust Badges */}
         <div className="flex flex-wrap justify-center gap-x-7 gap-y-2.5 py-8 mt-10 border-t border-border-subtle text-xs sm:text-sm font-semibold text-text-secondary hero-trust reveal">
           <span className="flex items-center gap-1.5">
-            <b className="text-plum font-extrabold">✓</b> Free delivery above Rs. 2,000
+            <b className="text-plum font-extrabold">✓</b> Free delivery above Rs. 2,500
           </span>
           <span className="flex items-center gap-1.5">
             <b className="text-plum font-extrabold">✓</b> 7-day eligible returns

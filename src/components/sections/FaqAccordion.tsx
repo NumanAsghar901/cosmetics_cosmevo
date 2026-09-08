@@ -15,7 +15,7 @@ const FAQ_DATA: FaqItem[] = [
   },
   {
     q: 'Is delivery really free?',
-    a: 'Delivery is free on all orders above Rs. 2,000.',
+    a: 'Delivery is free on all orders above Rs. 2,500.',
   },
   {
     q: 'Can I return a product?',

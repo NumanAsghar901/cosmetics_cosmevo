@@ -36,7 +36,7 @@ export async function sendOrderConfirmationEmail(order: Order) {
       <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
         <p><strong>Order Reference:</strong> ${order.reference}</p>
         <p><strong>Status:</strong> ${order.status}</p>
-        <p><strong>Delivery Address:</strong> ${order.customer_address}</p>
+        <p><strong>Delivery Address:</strong> ${order.customer_address}${order.province && !order.customer_address.includes(order.province) ? `, ${order.province}` : ''}</p>
       </div>
 
       <table style="width: 100%; border-collapse: collapse;">
@@ -55,7 +55,14 @@ export async function sendOrderConfirmationEmail(order: Order) {
 
       <div style="margin-top: 20px; text-align: right;">
         <p><strong>Subtotal:</strong> ${fmtPrice(order.subtotal)}</p>
-        <p><strong>Shipping Fee:</strong> ${order.total > order.subtotal ? fmtPrice(order.total - order.subtotal) : 'Free'}</p>
+        ${Boolean(order.discount_amount && order.discount_amount > 0) ? `
+          <p style="color: #059669;"><strong>Coupon Discount${order.coupon_code ? ` (${order.coupon_code})` : ''}:</strong> -${fmtPrice(order.discount_amount || 0)}</p>
+        ` : ''}
+        <p><strong>Shipping Fee${order.province ? ` (${order.province})` : ''}:</strong> ${
+          order.shipping_fee !== undefined && order.shipping_fee !== null
+            ? (order.shipping_fee > 0 ? fmtPrice(order.shipping_fee) : 'Free')
+            : (order.total > order.subtotal ? fmtPrice(order.total - order.subtotal) : 'Free')
+        }</p>
         <p><strong>Total:</strong> <span style="color: #6d28d9; font-size: 18px; font-weight: bold;">${fmtPrice(order.total)}</span></p>
       </div>
 

@@ -291,6 +291,7 @@ export async function getAllProducts(): Promise<Product[]> {
       caution: row.caution || '',
       concerns: Array.isArray(row.concerns) ? row.concerns : [],
       featured: Boolean(row.featured),
+      is_coming_soon: Boolean(row.is_coming_soon),
       image_url: row.image_url || FALLBACK_IMAGES[row.category] || FALLBACK_IMAGES.face,
     }));
   } catch {

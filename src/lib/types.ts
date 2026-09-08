@@ -13,6 +13,7 @@ export interface Product {
   caution?: string;
   concerns: string[];
   featured?: boolean;
+  is_coming_soon?: boolean;
   image_url?: string;
 }
 
@@ -32,6 +33,14 @@ export interface Category {
   description?: string;
 }
 
+export interface Coupon {
+  id?: string;
+  code: string;
+  discount_percent: number;
+  is_active: boolean;
+  created_at?: string;
+}
+
 export interface Order {
   id?: string;
   reference: string;
@@ -39,6 +48,7 @@ export interface Order {
   customer_email?: string;
   customer_phone: string;
   customer_address: string;
+  province?: string;
   notes?: string;
   items: {
     product_id: number | string;
@@ -47,8 +57,11 @@ export interface Order {
     qty: number;
   }[];
   subtotal: number;
+  shipping_fee?: number;
+  coupon_code?: string;
+  discount_amount?: number;
   total: number;
-  payment_method: 'bank' | 'jazzcash' | 'easypaisa' | string;
+  payment_method: 'bank' | 'jazzcash' | 'easypaisa' | 'cod' | string;
   status?: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
   created_at?: string;
 }
@@ -79,3 +92,18 @@ export interface DbSubcategory {
   slug: string;
   created_at?: string;
 }
+
+export interface ShowcaseVideo {
+  id: string;
+  title: string;
+  description?: string;
+  video_url: string;
+  thumbnail_url?: string;
+  product_id?: string | number;
+  product_name?: string;
+  product_slug?: string;
+  display_order?: number;
+  is_active?: boolean;
+  created_at?: string;
+}
+

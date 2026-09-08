@@ -36,10 +36,10 @@ export default function Header({ categories = [] }: { categories?: DbCategory[] 
         className="bg-ink text-white text-center text-[12.5px] font-medium py-2.5 px-4 tracking-normal"
       >
         <span className="hidden sm:inline">
-          Free delivery on orders above Rs. 2,000 &nbsp;|&nbsp; Delivery across Pakistan &nbsp;|&nbsp; WhatsApp Support: {WA_DISPLAY}
+          Free delivery on orders above Rs. 2,500 &nbsp;|&nbsp; Delivery across Pakistan &nbsp;|&nbsp; WhatsApp Support: {WA_DISPLAY}
         </span>
         <span className="inline sm:hidden">
-          Free delivery above Rs. 2,000 | WhatsApp: {WA_DISPLAY}
+          Free delivery above Rs. 2,500 | WhatsApp: {WA_DISPLAY}
         </span>
       </div>
 
@@ -81,6 +81,15 @@ export default function Header({ categories = [] }: { categories?: DbCategory[] 
                 {cat.name}
               </Link>
             ))}
+            <Link
+              href="/coming-soon"
+              className={`text-[15px] font-semibold transition-colors py-1 hover:text-plum flex items-center gap-1.5 ${
+                pathname === '/coming-soon' ? 'text-plum' : 'text-ink'
+              }`}
+            >
+              <span>Coming Soon</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            </Link>
             <Link
               href="/about"
               className={`text-[15px] font-semibold transition-colors py-1 hover:text-plum ${
@@ -173,6 +182,16 @@ export default function Header({ categories = [] }: { categories?: DbCategory[] 
                 {cat.name}
               </Link>
             ))}
+            <Link
+              href="/coming-soon"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="py-3 text-[15px] font-semibold text-ink border-b border-border-subtle/50 hover:text-plum flex items-center justify-between"
+            >
+              <span>Coming Soon</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 uppercase">
+                Preview
+              </span>
+            </Link>
             <Link
               href="/about"
               onClick={() => setIsMobileMenuOpen(false)}

@@ -88,6 +88,7 @@ export default function ProductDetailClient({ product, related }: Props) {
               <ProductArt
                 tone={tone}
                 featured={product.featured}
+                comingSoon={product.is_coming_soon}
                 imageUrl={product.image_url ? product.image_url.split(',')[activeImageIdx].trim() : undefined}
                 className="w-full max-w-[420px] mx-auto shadow-sm"
               />
@@ -121,96 +122,131 @@ export default function ProductDetailClient({ product, related }: Props) {
               {product.tagline}
             </p>
 
-            {/* Fake Stats: Reviews & Sold */}
-            {(() => {
-              const { sold, reviewCount } = getFakeStats(product.id);
-              const avgRating = 4.5 + ((typeof product.id === 'string' ? product.id.charCodeAt(0) : Number(product.id)) % 6) * 0.1;
-              return (
-                <div className="flex items-center gap-4 mt-3 flex-wrap">
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex">
-                      {[1,2,3,4,5].map((s) => (
-                        <svg key={s} width="14" height="14" viewBox="0 0 24 24"
-                          fill={s <= Math.round(avgRating) ? '#6B21A8' : 'none'}
-                          stroke={s <= Math.round(avgRating) ? '#6B21A8' : '#CBD5E1'}
-                          strokeWidth="1.5">
-                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                        </svg>
-                      ))}
+            {/* Fake Stats: Reviews & Sold (hidden for Coming Soon products) */}
+            {product.is_coming_soon ? (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                  <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse" />
+                  Coming Soon · Not Available for Ordering Yet
+                </span>
+              </div>
+            ) : (
+              (() => {
+                const { sold, reviewCount } = getFakeStats(product.id);
+                const avgRating = 4.5 + ((typeof product.id === 'string' ? product.id.charCodeAt(0) : Number(product.id)) % 6) * 0.1;
+                return (
+                  <div className="flex items-center gap-4 mt-3 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex">
+                        {[1,2,3,4,5].map((s) => (
+                          <svg key={s} width="14" height="14" viewBox="0 0 24 24"
+                            fill={s <= Math.round(avgRating) ? '#6B21A8' : 'none'}
+                            stroke={s <= Math.round(avgRating) ? '#6B21A8' : '#CBD5E1'}
+                            strokeWidth="1.5">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                          </svg>
+                        ))}
+                      </div>
+                      <span className="text-xs font-bold text-ink">{avgRating.toFixed(1)}</span>
+                      <span className="text-xs text-text-secondary">({reviewCount.toLocaleString()} reviews)</span>
                     </div>
-                    <span className="text-xs font-bold text-ink">{avgRating.toFixed(1)}</span>
-                    <span className="text-xs text-text-secondary">({reviewCount.toLocaleString()} reviews)</span>
+                    <div className="flex items-center gap-1 text-xs text-text-secondary">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                      <span><b className="text-ink">{sold.toLocaleString()}+</b> sold</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-text-secondary">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                    <span><b className="text-ink">{sold.toLocaleString()}+</b> sold</span>
-                  </div>
-                </div>
-              );
-            })()}
+                );
+              })()
+            )}
 
             {/* Price */}
             <div className="text-3xl font-extrabold text-ink mt-5 mb-6">
               {fmtPrice(product.price)}
             </div>
 
-            {/* Quantity Stepper */}
-            <div className="flex items-center gap-4 mb-6">
-              <span className="text-xs font-bold text-ink uppercase tracking-wider">Quantity</span>
-              <div className="flex items-center gap-3 bg-cream rounded-full px-3 py-1.5">
-                <button
-                  type="button"
-                  aria-label="Decrease quantity"
-                  onClick={() => setQty((prev) => Math.max(1, prev - 1))}
-                  className="w-7 h-7 rounded-full bg-warm-white flex items-center justify-center font-extrabold text-sm text-ink hover:bg-plum hover:text-white transition-colors"
-                >
-                  –
-                </button>
-                <span className="font-bold text-sm min-w-[24px] text-center text-ink">{qty}</span>
-                <button
-                  type="button"
-                  aria-label="Increase quantity"
-                  onClick={() => setQty((prev) => prev + 1)}
-                  className="w-7 h-7 rounded-full bg-warm-white flex items-center justify-center font-extrabold text-sm text-ink hover:bg-plum hover:text-white transition-colors"
-                >
-                  +
-                </button>
+            {/* Quantity Stepper & Action Buttons OR Coming Soon Box */}
+            {product.is_coming_soon ? (
+              <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-5 sm:p-6 mb-6 space-y-3">
+                <div className="flex items-center gap-2 text-amber-900 font-bold text-base">
+                  <span className="text-xl">🚀</span>
+                  <span>Coming Soon to Cosmevo</span>
+                </div>
+                <p className="text-xs sm:text-sm text-amber-850 text-amber-900/80 leading-relaxed">
+                  This product is currently preparing for official release. Ordering is not open yet, but full ingredient details, usage instructions, and benefits are displayed below.
+                </p>
+                <div className="pt-2">
+                  <a
+                    href={getWhatsAppUrl(`Hi Cosmevo, I am interested in ${product.name} (Coming Soon). Please notify me when it is launched!`)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-cursor="Chat"
+                    className="btn btn-primary inline-flex items-center gap-2 py-3 px-6 text-sm font-bold shadow-soft"
+                  >
+                    Ask / Notify on WhatsApp
+                  </a>
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                {/* Quantity Stepper */}
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="text-xs font-bold text-ink uppercase tracking-wider">Quantity</span>
+                  <div className="flex items-center gap-3 bg-cream rounded-full px-3 py-1.5">
+                    <button
+                      type="button"
+                      aria-label="Decrease quantity"
+                      onClick={() => setQty((prev) => Math.max(1, prev - 1))}
+                      className="w-7 h-7 rounded-full bg-warm-white flex items-center justify-center font-extrabold text-sm text-ink hover:bg-plum hover:text-white transition-colors"
+                    >
+                      –
+                    </button>
+                    <span className="font-bold text-sm min-w-[24px] text-center text-ink">{qty}</span>
+                    <button
+                      type="button"
+                      aria-label="Increase quantity"
+                      onClick={() => setQty((prev) => prev + 1)}
+                      className="w-7 h-7 rounded-full bg-warm-white flex items-center justify-center font-extrabold text-sm text-ink hover:bg-plum hover:text-white transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3.5 mb-6">
-              <button
-                ref={mainBtnRef}
-                type="button"
-                data-cursor="Add"
-                onClick={() => handleAddToCart(true)}
-                className="btn btn-primary magnetic flex-1 min-w-[180px]"
-              >
-                Add to Cart
-              </button>
-              <button
-                type="button"
-                onClick={handleBuyNow}
-                className="btn btn-secondary magnetic flex-1 min-w-[160px] border-plum text-plum hover:bg-plum/5"
-              >
-                Buy Now
-              </button>
-              <a
-                href={waUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                data-cursor="Chat"
-                className="btn btn-secondary magnetic"
-              >
-                Ask on WhatsApp
-              </a>
-            </div>
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-3.5 mb-6">
+                  <button
+                    ref={mainBtnRef}
+                    type="button"
+                    data-cursor="Add"
+                    onClick={() => handleAddToCart(true)}
+                    className="btn btn-primary magnetic flex-1 min-w-[180px]"
+                  >
+                    Add to Cart
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBuyNow}
+                    className="btn btn-secondary magnetic flex-1 min-w-[160px] border-plum text-plum hover:bg-plum/5"
+                  >
+                    Buy Now
+                  </button>
+                  <a
+                    href={waUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-cursor="Chat"
+                    className="btn btn-secondary magnetic"
+                  >
+                    Ask on WhatsApp
+                  </a>
+                </div>
+              </>
+            )}
 
             {/* Trust Assurances */}
             <div className="border-t border-border-subtle pt-5 space-y-2.5 text-xs sm:text-sm text-text-secondary">
@@ -227,7 +263,7 @@ export default function ProductDetailClient({ product, related }: Props) {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-plum shrink-0">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-                <span><b>Free Shipping:</b> Automatically applied on orders above Rs. 2,000.</span>
+                <span><b>Free Shipping:</b> Automatically applied on orders above Rs. 2,500.</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-plum shrink-0">
@@ -300,29 +336,31 @@ export default function ProductDetailClient({ product, related }: Props) {
           </section>
         )}
 
-        {/* Reviews Section */}
-        <ReviewsSection productId={product.id} />
+        {/* Reviews Section - hidden for Coming Soon products */}
+        {!product.is_coming_soon && <ReviewsSection productId={product.id} />}
       </div>
 
-      {/* Mobile Sticky Bottom Bar */}
-      <div
-        id="stickyBar"
-        className={`lg:hidden fixed left-0 right-0 bottom-0 bg-warm-white border-t border-border-subtle shadow-lg p-3.5 px-6 flex items-center justify-between gap-4 z-35 transition-transform duration-300 ease-cosmevo ${
-          showStickyBar ? 'translate-y-0' : 'translate-y-full'
-        }`}
-      >
-        <div className="min-w-0 flex-1">
-          <div className="text-xs font-bold text-ink truncate">{product.name}</div>
-          <div className="text-xs font-extrabold text-plum">{fmtPrice(product.price)}</div>
-        </div>
-        <button
-          type="button"
-          onClick={() => handleAddToCart(true)}
-          className="btn btn-primary btn-sm py-2.5 px-5 text-xs font-bold"
+      {/* Mobile Sticky Bottom Bar - hidden for Coming Soon */}
+      {!product.is_coming_soon && (
+        <div
+          id="stickyBar"
+          className={`lg:hidden fixed left-0 right-0 bottom-0 bg-warm-white border-t border-border-subtle shadow-lg p-3.5 px-6 flex items-center justify-between gap-4 z-35 transition-transform duration-300 ease-cosmevo ${
+            showStickyBar ? 'translate-y-0' : 'translate-y-full'
+          }`}
         >
-          Add to Cart
-        </button>
-      </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-bold text-ink truncate">{product.name}</div>
+            <div className="text-xs font-extrabold text-plum">{fmtPrice(product.price)}</div>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleAddToCart(true)}
+            className="btn btn-primary btn-sm py-2.5 px-5 text-xs font-bold"
+          >
+            Add to Cart
+          </button>
+        </div>
+      )}
     </div>
   );
 }
