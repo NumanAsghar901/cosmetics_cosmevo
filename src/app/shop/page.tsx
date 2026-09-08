@@ -8,8 +8,9 @@ import ConcernChips from '@/components/ui/ConcernChips';
 import ProductCard from '@/components/ui/ProductCard';
 import CtaBanner from '@/components/sections/CtaBanner';
 import { getAllProducts } from '@/lib/products';
+import { getAllCategories, getAllSubcategories } from '@/lib/categories';
 import { getCategoryLabel } from '@/lib/utils';
-import { Product } from '@/lib/types';
+import { Product, DbCategory, DbSubcategory } from '@/lib/types';
 
 function ShopContent() {
   const searchParams = useSearchParams();
@@ -19,11 +20,15 @@ function ShopContent() {
   const concernParam = searchParams.get('concern') || null;
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<DbCategory[]>([]);
+  const [subcategories, setSubcategories] = useState<DbSubcategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>(categoryParam);
   const [selectedConcern, setSelectedConcern] = useState<string | null>(concernParam);
 
   useEffect(() => {
     getAllProducts().then(setProducts);
+    getAllCategories().then(setCategories);
+    getAllSubcategories().then(setSubcategories);
   }, []);
 
   useEffect(() => {
@@ -83,6 +88,7 @@ function ShopContent() {
           <FilterPills
             selected={selectedCategory}
             onSelect={handleCategoryChange}
+            categories={categories}
           />
         </div>
 
@@ -90,6 +96,7 @@ function ShopContent() {
           <ConcernChips
             selected={selectedConcern}
             onSelect={handleConcernChange}
+            subcategories={subcategories}
           />
         </div>
 

@@ -6,8 +6,9 @@ import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useModal } from '@/context/ModalContext';
 import { WA_DISPLAY } from '@/lib/constants';
+import { DbCategory } from '@/lib/types';
 
-export default function Header() {
+export default function Header({ categories = [] }: { categories?: DbCategory[] }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { cartCount, openCart } = useCart();
@@ -71,24 +72,15 @@ export default function Header() {
             >
               Shop
             </Link>
-            <Link
-              href="/shop?category=face"
-              className="text-[15px] font-semibold text-ink hover:text-plum transition-colors py-1"
-            >
-              Face Care
-            </Link>
-            <Link
-              href="/shop?category=hair"
-              className="text-[15px] font-semibold text-ink hover:text-plum transition-colors py-1"
-            >
-              Hair Care
-            </Link>
-            <Link
-              href="/shop?category=soap"
-              className="text-[15px] font-semibold text-ink hover:text-plum transition-colors py-1"
-            >
-              Soaps
-            </Link>
+            {categories.map((cat) => (
+              <Link
+                key={cat.id}
+                href={`/shop?category=${cat.slug}`}
+                className="text-[15px] font-semibold text-ink hover:text-plum py-1 capitalize"
+              >
+                {cat.name}
+              </Link>
+            ))}
             <Link
               href="/about"
               className={`text-[15px] font-semibold transition-colors py-1 hover:text-plum ${
@@ -171,27 +163,16 @@ export default function Header() {
             >
               Shop
             </Link>
-            <Link
-              href="/shop?category=face"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="py-3 text-[15px] font-semibold text-ink border-b border-border-subtle/50 hover:text-plum"
-            >
-              Face Care
-            </Link>
-            <Link
-              href="/shop?category=hair"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="py-3 text-[15px] font-semibold text-ink border-b border-border-subtle/50 hover:text-plum"
-            >
-              Hair Care
-            </Link>
-            <Link
-              href="/shop?category=soap"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="py-3 text-[15px] font-semibold text-ink border-b border-border-subtle/50 hover:text-plum"
-            >
-              Soaps
-            </Link>
+            {categories.map((cat) => (
+              <Link
+                key={`mobile-${cat.id}`}
+                href={`/shop?category=${cat.slug}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="py-3 text-[15px] font-semibold text-ink border-b border-border-subtle/50 hover:text-plum capitalize"
+              >
+                {cat.name}
+              </Link>
+            ))}
             <Link
               href="/about"
               onClick={() => setIsMobileMenuOpen(false)}

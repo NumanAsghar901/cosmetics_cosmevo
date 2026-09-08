@@ -6,8 +6,9 @@ import { WA_DISPLAY, SUPPORT_EMAIL } from '@/lib/constants';
 import { getWhatsAppUrl } from '@/lib/utils';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { useToast } from '@/context/ToastContext';
+import { DbCategory } from '@/lib/types';
 
-export default function Footer() {
+export default function Footer({ categories = [] }: { categories?: DbCategory[] }) {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -95,9 +96,13 @@ export default function Footer() {
             <h4 className="text-white text-[13px] font-bold uppercase tracking-wider mb-4">Shop</h4>
             <ul className="space-y-2.5 text-sm">
               <li><Link href="/shop" className="hover:text-white transition-colors">All Products</Link></li>
-              <li><Link href="/shop?category=face" className="hover:text-white transition-colors">Face Care</Link></li>
-              <li><Link href="/shop?category=hair" className="hover:text-white transition-colors">Hair Care</Link></li>
-              <li><Link href="/shop?category=soap" className="hover:text-white transition-colors">Soaps</Link></li>
+              {categories.map(cat => (
+                <li key={cat.id}>
+                  <Link href={`/shop?category=${cat.slug}`} className="hover:text-white transition-colors capitalize">
+                    {cat.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

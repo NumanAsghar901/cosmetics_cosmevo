@@ -64,3 +64,18 @@ export interface ContactMessage {
   status?: 'unread' | 'read' | 'replied';
   created_at?: string;
 }
+
+export interface DbCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  created_at?: string;
+}
+
+export interface DbSubcategory {
+  id: string;
+  name: string;
+  slug: string;
+  created_at?: string;
+}

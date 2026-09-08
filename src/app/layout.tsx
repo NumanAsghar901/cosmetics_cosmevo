@@ -5,6 +5,7 @@ import { ToastProvider } from '@/context/ToastContext';
 import { CartProvider } from '@/context/CartContext';
 import { ModalProvider } from '@/context/ModalContext';
 import { getAllProducts } from '@/lib/products';
+import { getAllCategories } from '@/lib/categories';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/layout/CartDrawer';
@@ -32,6 +33,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const products = await getAllProducts();
+  const categories = await getAllCategories();
 
   return (
     <html lang="en">
@@ -41,11 +43,11 @@ export default async function RootLayout({
             <ModalProvider>
               <ScrollProgress />
               <RevealInitializer />
-              <Header />
+              <Header categories={categories} />
               <main className="min-h-screen">
                 {children}
               </main>
-              <Footer />
+              <Footer categories={categories} />
               <CartDrawer />
               <SearchOverlay />
               <QuickViewModal />

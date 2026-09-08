@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Product } from '@/lib/types';
+import { Product, DbCategory, DbSubcategory } from '@/lib/types';
 import { ArrowLeft, Plus, X, UploadCloud, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -17,6 +17,8 @@ export default function ProductForm({ initialData, isEdit }: ProductFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<DbCategory[]>([]);
+  const [subcategories, setSubcategories] = useState<DbSubcategory[]>([]);
   const supabase = createClient();
 
   const [formData, setFormData] = useState<Partial<Product>>({
@@ -37,6 +39,18 @@ export default function ProductForm({ initialData, isEdit }: ProductFormProps) {
   });
 
   const [concernInput, setConcernInput] = useState('');
+
+  React.useEffect(() => {
+    async function fetchData() {
+      const [catsRes, subsRes] = await Promise.all([
+        supabase.from('categories').select('*').order('name'),
+        supabase.from('subcategories').select('*').order('name')
+      ]);
+      if (catsRes.data) setCategories(catsRes.data as DbCategory[]);
+      if (subsRes.data) setSubcategories(subsRes.data as DbSubcategory[]);
+    }
+    fetchData();
+  }, [supabase]);
 
   const handleArrayChange = (field: 'benefits' | 'how_to_use', index: number, value: string) => {
     const newArray = [...(formData[field] || [])];
@@ -225,12 +239,15 @@ export default function ProductForm({ initialData, isEdit }: ProductFormProps) {
               <select
                 required
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, category: e.target.value, subcategory: '' });
+                }}
                 className="w-full px-4 py-2.5 rounded-lg border border-border-subtle focus:ring-2 focus:ring-plum/20 focus:border-plum capitalize"
               >
-                <option value="face">Face Care</option>
-                <option value="hair">Hair Care</option>
-                <option value="soap">Soaps</option>
+                <option value="">Select a category...</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.slug}>{cat.name}</option>
+                ))}
               </select>
             </div>
             <div>
@@ -422,41 +439,36 @@ export default function ProductForm({ initialData, isEdit }: ProductFormProps) {
           </div>
         </div>
 
-        {/* Concerns / Tags */}
+        {/* Concerns / Tags (Subcategories) */}
         <div className="pt-4">
-          <h2 className="text-lg font-semibold text-ink mb-4 border-b border-border-subtle pb-2">Concerns / Tags</h2>
-          <div className="flex gap-3 mb-4">
-            <input
-              type="text"
-              value={concernInput}
-              onChange={(e) => setConcernInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddConcern())}
-              placeholder="e.g., acne-prone-skin"
-              className="flex-1 md:w-1/3 px-4 py-2.5 rounded-lg border border-border-subtle focus:ring-2 focus:ring-plum/20 focus:border-plum"
-            />
-            <button
-              type="button"
-              onClick={handleAddConcern}
-              className="bg-ink text-white px-4 py-2 rounded-lg hover:bg-ink/80 transition-colors"
-            >
-              Add
-            </button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {formData.concerns?.map((concern) => (
-              <span key={concern} className="bg-cream text-ink text-sm font-medium px-3 py-1.5 rounded-full flex items-center gap-2">
-                {concern}
+          <h2 className="text-lg font-semibold text-ink mb-4 border-b border-border-subtle pb-2">Subcategories (Concerns)</h2>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {subcategories.map(sub => {
+              const isSelected = formData.concerns?.includes(sub.slug);
+              return (
                 <button
+                  key={sub.id}
                   type="button"
-                  onClick={() => handleRemoveConcern(concern)}
-                  className="hover:text-red-500 transition-colors"
+                  onClick={() => {
+                    if (isSelected) {
+                      handleRemoveConcern(sub.slug);
+                    } else {
+                      setFormData({
+                        ...formData,
+                        concerns: [...(formData.concerns || []), sub.slug]
+                      });
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+                    isSelected ? 'bg-plum text-white border-plum' : 'bg-cream text-ink border-border-subtle hover:border-plum/50'
+                  }`}
                 >
-                  <X size={14} />
+                  {sub.name}
                 </button>
-              </span>
-            ))}
-            {(!formData.concerns || formData.concerns.length === 0) && (
-              <span className="text-sm text-ink/40">No concerns/tags added yet.</span>
+              );
+            })}
+            {subcategories.length === 0 && (
+              <span className="text-sm text-ink/40">No subcategories available. Add them in the Admin Categories panel.</span>
             )}
           </div>
         </div>

@@ -9,9 +9,9 @@ import CtaBanner from '@/components/sections/CtaBanner';
 import FilterPills from '@/components/ui/FilterPills';
 import ConcernChips from '@/components/ui/ConcernChips';
 import ProductCard from '@/components/ui/ProductCard';
-import { Product } from '@/lib/types';
+import { Product, DbCategory, DbSubcategory } from '@/lib/types';
 
-export default function HomeClient({ initialProducts }: { initialProducts: Product[] }) {
+export default function HomeClient({ initialProducts, categories, subcategories }: { initialProducts: Product[], categories: DbCategory[], subcategories: DbSubcategory[] }) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedConcern, setSelectedConcern] = useState<string | null>(null);
 
@@ -57,6 +57,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
               onSelect={(cat) => {
                 setSelectedCategory(cat);
               }}
+              categories={categories}
             />
           </div>
 
@@ -64,6 +65,7 @@ export default function HomeClient({ initialProducts }: { initialProducts: Produ
           <ConcernChips
             selected={selectedConcern}
             onSelect={setSelectedConcern}
+            subcategories={subcategories}
           />
 
           {/* Responsive Product Grid */}
