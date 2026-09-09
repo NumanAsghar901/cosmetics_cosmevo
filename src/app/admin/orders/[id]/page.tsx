@@ -5,13 +5,15 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Order } from '@/lib/types';
-import { ArrowLeft, User, MapPin, Package, CreditCard } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Package, CreditCard, Check, MailQuestion } from 'lucide-react';
+import { getLocalReadOrderIds, isOrderRead, markOrderAsRead, markOrderAsUnread } from '@/lib/ordersStorage';
 
 export default function OrderDetailsPage() {
   const { id } = useParams();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isReadState, setIsReadState] = useState(true);
   const supabase = createClient();
 
   useEffect(() => {
@@ -25,7 +27,13 @@ export default function OrderDetailsPage() {
           .single();
         
         if (error) throw error;
-        if (data) setOrder(data as Order);
+        if (data) {
+          setOrder(data as Order);
+          // Automatically mark this order as read when viewed
+          const orderIdStr = String(id);
+          markOrderAsRead(orderIdStr);
+          setIsReadState(true);
+        }
       } catch (error) {
         console.error('Error fetching order:', error);
       } finally {
@@ -37,6 +45,18 @@ export default function OrderDetailsPage() {
       fetchOrder();
     }
   }, [id]);
+
+  const handleToggleRead = async () => {
+    if (!id) return;
+    const orderIdStr = String(id);
+    if (isReadState) {
+      await markOrderAsUnread(orderIdStr);
+      setIsReadState(false);
+    } else {
+      await markOrderAsRead(orderIdStr);
+      setIsReadState(true);
+    }
+  };
 
   const handleStatusChange = async (newStatus: string) => {
     if (!order) return;
@@ -88,7 +108,7 @@ export default function OrderDetailsPage() {
             <ArrowLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-ink flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-ink flex flex-wrap items-center gap-2 sm:gap-3">
               Order #{order.reference}
               <span className={`px-2.5 py-1 text-xs rounded-full font-semibold capitalize tracking-wide
                 ${order.status === 'delivered' ? 'bg-green-100 text-green-700' :
@@ -100,6 +120,17 @@ export default function OrderDetailsPage() {
               >
                 {order.status || 'pending'}
               </span>
+              {isReadState ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <Check size={12} className="text-emerald-600" />
+                  Read
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-100 text-rose-700 border border-rose-200 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
+                  Unread
+                </span>
+              )}
             </h1>
             <p className="text-ink/60 text-sm mt-1">
               Placed on {new Date(order.created_at || '').toLocaleString('en-PK', { dateStyle: 'medium', timeStyle: 'short' })}
@@ -107,21 +138,36 @@ export default function OrderDetailsPage() {
           </div>
         </div>
         
-        {/* Status Update Dropdown */}
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-ink">Update Status:</label>
-          <select
-            value={order.status || 'pending'}
-            onChange={(e) => handleStatusChange(e.target.value)}
-            disabled={isUpdating}
-            className="px-4 py-2 border border-border-subtle rounded-lg bg-white focus:ring-2 focus:ring-plum/20 focus:border-plum text-sm font-medium capitalize disabled:opacity-50"
+        {/* Actions & Status Update */}
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={handleToggleRead}
+            className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors border flex items-center gap-1.5 ${
+              isReadState
+                ? 'bg-white text-ink/70 hover:bg-rose-50 hover:text-rose-700 border-border-subtle'
+                : 'bg-plum text-white hover:bg-plum/90 border-transparent'
+            }`}
+            title={isReadState ? 'Mark order as unread to review later' : 'Mark order as read'}
           >
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+            {isReadState ? 'Mark as Unread' : 'Mark as Read'}
+          </button>
+
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-ink hidden sm:inline">Status:</label>
+            <select
+              value={order.status || 'pending'}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              disabled={isUpdating}
+              className="px-3 sm:px-4 py-2 border border-border-subtle rounded-lg bg-white focus:ring-2 focus:ring-plum/20 focus:border-plum text-sm font-medium capitalize disabled:opacity-50"
+            >
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
         </div>
       </div>
 

@@ -159,16 +159,13 @@ export default function CartDrawer() {
                 <span>Subtotal</span>
                 <span className="font-bold text-ink">{fmtPrice(cartSubtotal)}</span>
               </div>
-              <div className="flex justify-between text-sm text-text-secondary">
-                <span>Delivery</span>
-                <span className={`font-bold ${remaining <= 0 ? 'text-plum' : 'text-ink'}`}>
-                  {remaining <= 0 ? 'Free' : 'Rs. 200'}
-                </span>
-              </div>
               <div className="flex items-center justify-between text-base font-extrabold text-ink pt-2 border-t border-border-subtle">
                 <span>Total</span>
-                <span>{fmtPrice(cartSubtotal + (remaining <= 0 ? 0 : 200))}</span>
+                <span>{fmtPrice(cartSubtotal)}</span>
               </div>
+              <p className="text-[11.5px] text-text-secondary text-center pt-1">
+                Delivery charges will be calculated at checkout
+              </p>
             </div>
 
             {/* Checkout Link */}

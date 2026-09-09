@@ -1,16 +1,42 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Package, ShoppingCart, LogOut, Menu, X, Tags, TicketPercent, Film } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { getLocalReadOrderIds } from '@/lib/ordersStorage';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadOrdersCount, setUnreadOrdersCount] = useState<number>(0);
+
+  useEffect(() => {
+    async function loadUnreadCount() {
+      try {
+        const localReadIds = getLocalReadOrderIds();
+        const { data } = await supabase.from('orders').select('id, is_read');
+        if (data) {
+          const unread = data.filter((o) => o.is_read !== true && !localReadIds.includes(o.id));
+          setUnreadOrdersCount(unread.length);
+        }
+      } catch (e) {}
+    }
+
+    loadUnreadCount();
+
+    const handleUpdate = () => loadUnreadCount();
+    window.addEventListener('cosmevo_orders_read_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+
+    return () => {
+      window.removeEventListener('cosmevo_orders_read_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, [pathname]);
 
   // Don't show sidebar on login page
   if (pathname === '/admin/login') {
@@ -67,14 +93,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.name}
                 href={item.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                className={`flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
                   isActive 
                     ? 'bg-plum text-white font-medium' 
                     : 'text-white/70 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                <Icon size={20} />
-                {item.name}
+                <div className="flex items-center gap-3">
+                  <Icon size={20} />
+                  <span>{item.name}</span>
+                </div>
+                {item.name === 'Orders' && unreadOrdersCount > 0 && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-500 text-white shadow-2xs">
+                    {unreadOrdersCount}
+                  </span>
+                )}
               </Link>
             );
           })}

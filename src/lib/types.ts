@@ -63,6 +63,7 @@ export interface Order {
   total: number;
   payment_method: 'bank' | 'jazzcash' | 'easypaisa' | 'cod' | string;
   status?: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+  is_read?: boolean;
   created_at?: string;
 }
 
