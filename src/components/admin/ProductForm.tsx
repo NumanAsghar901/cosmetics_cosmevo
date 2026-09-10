@@ -136,6 +136,14 @@ export default function ProductForm({ initialData, isEdit }: ProductFormProps) {
   const removeImage = (indexToRemove: number) => {
     if (!formData.image_url) return;
     const images = formData.image_url.split(',').map(s => s.trim());
+    const removedUrl = images[indexToRemove];
+    if (removedUrl && removedUrl.includes('cloudinary.com')) {
+      fetch('/api/admin/cloudinary/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: removedUrl }),
+      }).catch(e => console.warn('Cloudinary image deletion failed:', e));
+    }
     images.splice(indexToRemove, 1);
     setFormData({ ...formData, image_url: images.length > 0 ? images.join(',') : '' });
   };

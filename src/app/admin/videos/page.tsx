@@ -494,7 +494,26 @@ export default function AdminVideosPage() {
       console.warn('localStorage deletion error:', e);
     }
 
-    // 3. If in Supabase, also delete from Supabase
+    // 3. Delete assets from Cloudinary
+    const videoToDelete = videos.find((v) => v.id === id);
+    if (videoToDelete) {
+      const urlsToDelete = [videoToDelete.video_url, videoToDelete.thumbnail_url].filter(
+        (u): u is string => Boolean(u && typeof u === 'string' && u.includes('cloudinary.com'))
+      );
+      if (urlsToDelete.length > 0) {
+        try {
+          fetch('/api/admin/cloudinary/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ urls: urlsToDelete }),
+          }).catch((cErr) => console.warn('Cloudinary video deletion call failed:', cErr));
+        } catch (cErr) {
+          console.warn('Cloudinary video deletion call failed:', cErr);
+        }
+      }
+    }
+
+    // 4. If in Supabase, also delete from Supabase
     if (!id.startsWith('fallback-') && !id.startsWith('local-')) {
       try {
         await supabase

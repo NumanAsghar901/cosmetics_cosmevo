@@ -40,6 +40,25 @@ export default function AdminProductsPage() {
     
     try {
       if (!supabase) return;
+
+      // 1. Delete associated images from Cloudinary
+      const productToDelete = products.find(p => p.id === id);
+      if (productToDelete && productToDelete.image_url) {
+        const urls = productToDelete.image_url
+          .split(',')
+          .map(s => s.trim())
+          .filter(u => u.includes('cloudinary.com'));
+
+        if (urls.length > 0) {
+          fetch('/api/admin/cloudinary/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ urls }),
+          }).catch(e => console.warn('Cloudinary product deletion call failed:', e));
+        }
+      }
+
+      // 2. Delete from Supabase
       await supabase.from('products').delete().eq('id', id);
       setProducts(products.filter(p => p.id !== id));
     } catch (error) {
