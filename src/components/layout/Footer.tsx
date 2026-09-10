@@ -111,7 +111,7 @@ export default function Footer({ categories = [] }: { categories?: DbCategory[] 
             <h4 className="text-white text-[13px] font-bold uppercase tracking-wider mb-4">Information</h4>
             <ul className="space-y-2.5 text-sm">
               <li><Link href="/about" className="hover:text-white transition-colors">About Cosmevo</Link></li>
-              <li><Link href="/distributors" className="hover:text-white transition-colors text-cream/90 font-medium flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-plum"></span>Our Distributors</Link></li>
+              <li><Link href="/distributors" className="hover:text-white transition-colors">Our Distributors</Link></li>
               <li><Link href="/about#contact" className="hover:text-white transition-colors">Contact Support</Link></li>
               <li><Link href="/about#faq" className="hover:text-white transition-colors">Shipping &amp; Delivery</Link></li>
               <li><Link href="/about#faq" className="hover:text-white transition-colors">7-Day Returns</Link></li>
