@@ -76,10 +76,11 @@ export function CartProvider({
   // 1 item: 0%
   // 2 items: 10%
   // 3 items: 13%
-  // 4 items: 16%
-  // N >= 2: 10 + (N - 2) * 3%
+  // 4 items: 16% (limit 16% max in custom bundles)
   const routineDiscountPct = useMemo(() => {
-    return cartCount >= 2 ? 10 + (cartCount - 2) * 3 : 0;
+    if (cartCount < 2) return 0;
+    const rawPct = 10 + (cartCount - 2) * 3;
+    return Math.min(16, rawPct);
   }, [cartCount]);
 
   const routineSavings = useMemo(() => {

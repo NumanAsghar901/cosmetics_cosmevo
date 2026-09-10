@@ -183,9 +183,9 @@ export default function CartDrawer() {
                     <span>-{fmtPrice(routineSavings)}</span>
                   </div>
                   <p className="text-[11px] text-plum-muted font-medium">
-                    {cartCount >= 2
-                      ? `Add 1 more product to unlock ${routineDiscountPct + 3}% savings!`
-                      : ''}
+                    {routineDiscountPct < 16
+                      ? `Add 1 more product to unlock ${Math.min(16, routineDiscountPct + 3)}% savings!`
+                      : '🎉 Maximum 16% routine discount unlocked!'}
                   </p>
                 </div>
               ) : cartCount === 1 ? (

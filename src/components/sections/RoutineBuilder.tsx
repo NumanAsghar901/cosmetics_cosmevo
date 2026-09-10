@@ -165,9 +165,10 @@ export default function RoutineBuilder({ products }: RoutineBuilderProps) {
   // 2 products: 10%
   // 3 products: 13%
   // 4 products: 16%
-  // N >= 2: 10 + (N - 2) * 3%
+  // In custom bundles, discount limit is strictly 16%
   const selectedCount = selectedProducts.length;
-  const discountPct = selectedCount < 2 ? 0 : 10 + (selectedCount - 2) * 3;
+  const rawDiscountPct = selectedCount < 2 ? 0 : 10 + (selectedCount - 2) * 3;
+  const discountPct = activeTab === 'custom' ? Math.min(16, rawDiscountPct) : rawDiscountPct;
   const baseSubtotal = useMemo(() => {
     return selectedProducts.reduce((sum, p) => sum + p.price, 0);
   }, [selectedProducts]);
@@ -190,7 +191,7 @@ export default function RoutineBuilder({ products }: RoutineBuilderProps) {
     custom: {
       title: 'Custom Routine Builder',
       badge: 'Build Any Routine',
-      desc: 'Mix and match any products from face care, hair care, and daily soaps. Enjoy escalating routine discounts the more steps you add!',
+      desc: 'Mix and match any products from face care, hair care, and daily soaps. Enjoy escalating routine discounts: 10% for 2 items, 13% for 3 items, up to 16% max for 4+ items!',
     },
   };
 
@@ -226,8 +227,8 @@ export default function RoutineBuilder({ products }: RoutineBuilderProps) {
           <p className="mt-3 text-base sm:text-lg text-text-secondary leading-relaxed">
             Pick your targeted concern or customize your own everyday routine. Enjoy tiered routine savings: 
             <span className="font-bold text-plum"> 10% OFF for 2 products</span>, 
-            <span className="font-bold text-plum"> 13% for 3</span>, 
-            <span className="font-bold text-plum"> 16% for 4</span>, and +3% for each additional product.
+            <span className="font-bold text-plum"> 13% for 3</span>, and 
+            <span className="font-bold text-plum"> 16% for 4+ products</span> (maximum 16% discount in custom bundles).
           </p>
         </div>
 

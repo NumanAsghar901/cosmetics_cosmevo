@@ -63,11 +63,12 @@ export async function POST(req: Request) {
     }
 
     // 2b. Compute Routine Savings Server-Side
-    // Routine savings: 10% for 2 items, 13% for 3 items, 16% for 4 items, +3% per extra item
+    // Routine savings: 10% for 2 items, 13% for 3 items, 16% for 4+ items (max 16% in custom bundles)
     const totalItemCount = Array.isArray(items)
       ? items.reduce((sum: number, it: any) => sum + (Number(it.qty) || 1), 0)
       : 0;
-    const routinePct = totalItemCount >= 2 ? 10 + (totalItemCount - 2) * 3 : 0;
+    const rawRoutinePct = totalItemCount >= 2 ? 10 + (totalItemCount - 2) * 3 : 0;
+    const routinePct = Math.min(16, rawRoutinePct);
     const routineSavings = routinePct > 0 ? Math.round((numSubtotal * routinePct) / 100) : 0;
 
     const discountAmount = routineSavings + couponDiscount;
