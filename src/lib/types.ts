@@ -108,3 +108,19 @@ export interface ShowcaseVideo {
   created_at?: string;
 }
 
+export interface Distributor {
+  id: string;
+  name: string;
+  contact_person?: string;
+  city: string;
+  province?: string;
+  phone: string;
+  whatsapp?: string;
+  email?: string;
+  address: string;
+  area_covered?: string;
+  display_order?: number;
+  is_active?: boolean;
+  created_at?: string;
+}
+
