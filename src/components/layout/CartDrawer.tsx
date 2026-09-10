@@ -9,10 +9,23 @@ import { getProductById } from '@/lib/products';
 import ProductArt from '@/components/ui/ProductArt';
 
 export default function CartDrawer() {
-  const { isCartOpen, closeCart, cart, cartSubtotal, changeQty, removeFromCart, products } = useCart();
+  const { 
+    isCartOpen, 
+    closeCart, 
+    cart, 
+    cartCount,
+    cartSubtotal, 
+    routineDiscountPct,
+    routineSavings,
+    cartTotal,
+    changeQty, 
+    removeFromCart, 
+    products 
+  } = useCart();
 
-  const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - cartSubtotal);
-  const progressPct = Math.min(100, (cartSubtotal / FREE_DELIVERY_THRESHOLD) * 100);
+  const effectiveTotal = routineSavings > 0 ? cartTotal : cartSubtotal;
+  const remaining = Math.max(0, FREE_DELIVERY_THRESHOLD - effectiveTotal);
+  const progressPct = Math.min(100, (effectiveTotal / FREE_DELIVERY_THRESHOLD) * 100);
 
   return (
     <>
@@ -154,14 +167,36 @@ export default function CartDrawer() {
             </div>
 
             {/* Calculations */}
-            <div className="space-y-2 mb-4">
+            <div className="space-y-2.5 mb-4">
               <div className="flex justify-between text-sm text-text-secondary">
                 <span>Subtotal</span>
                 <span className="font-bold text-ink">{fmtPrice(cartSubtotal)}</span>
               </div>
+
+              {routineSavings > 0 ? (
+                <div className="bg-blush/40 border border-plum/15 rounded-xl p-2.5 space-y-1">
+                  <div className="flex justify-between items-center text-sm font-bold text-plum">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-plum animate-pulse" />
+                      Routine Savings ({routineDiscountPct}%)
+                    </span>
+                    <span>-{fmtPrice(routineSavings)}</span>
+                  </div>
+                  <p className="text-[11px] text-plum-muted font-medium">
+                    {cartCount >= 2
+                      ? `Add 1 more product to unlock ${routineDiscountPct + 3}% savings!`
+                      : ''}
+                  </p>
+                </div>
+              ) : cartCount === 1 ? (
+                <div className="text-[12px] font-medium text-plum bg-cream border border-border-subtle px-3 py-2 rounded-xl flex items-center justify-between">
+                  <span>✨ Add 1 more item for 10% routine savings!</span>
+                </div>
+              ) : null}
+
               <div className="flex items-center justify-between text-base font-extrabold text-ink pt-2 border-t border-border-subtle">
                 <span>Total</span>
-                <span>{fmtPrice(cartSubtotal)}</span>
+                <span className="text-plum">{fmtPrice(cartTotal)}</span>
               </div>
               <p className="text-[11.5px] text-text-secondary text-center pt-1">
                 Delivery charges will be calculated at checkout

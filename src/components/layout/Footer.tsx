@@ -96,6 +96,7 @@ export default function Footer({ categories = [] }: { categories?: DbCategory[] 
             <h4 className="text-white text-[13px] font-bold uppercase tracking-wider mb-4">Shop</h4>
             <ul className="space-y-2.5 text-sm">
               <li><Link href="/shop" className="hover:text-white transition-colors">All Products</Link></li>
+              <li><Link href="/#routine" className="hover:text-white transition-colors">Routines &amp; Bundles</Link></li>
               {categories.map(cat => (
                 <li key={cat.id}>
                   <Link href={`/shop?category=${cat.slug}`} className="hover:text-white transition-colors capitalize">

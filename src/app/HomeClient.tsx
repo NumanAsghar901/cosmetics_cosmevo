@@ -10,6 +10,7 @@ import CtaBanner from '@/components/sections/CtaBanner';
 import FilterPills from '@/components/ui/FilterPills';
 import ConcernChips from '@/components/ui/ConcernChips';
 import ProductCard from '@/components/ui/ProductCard';
+import RoutineBuilder from '@/components/sections/RoutineBuilder';
 import { Product, DbCategory, DbSubcategory, ShowcaseVideo } from '@/lib/types';
 
 export default function HomeClient({ 
@@ -103,6 +104,9 @@ export default function HomeClient({
           )}
         </div>
       </section>
+
+      {/* 3.5 BUILD YOUR ROUTINE & BUNDLE BUILDER */}
+      <RoutineBuilder products={initialProducts} />
 
       {/* 4. VIDEO SHOWCASE & REELS */}
       <VideoShowcase videos={videos} />

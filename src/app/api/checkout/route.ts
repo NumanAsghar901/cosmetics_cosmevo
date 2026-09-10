@@ -35,7 +35,7 @@ export async function POST(req: Request) {
 
     // 2. Validate Coupon Server-Side (if provided)
     let verifiedCouponCode: string | undefined = undefined;
-    let discountAmount = 0;
+    let couponDiscount = 0;
 
     if (coupon_code && typeof coupon_code === 'string' && coupon_code.trim()) {
       const { data: couponData, error: couponErr } = await supabase
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
       if (couponData && couponData.is_active) {
         verifiedCouponCode = couponData.code;
         const pct = Number(couponData.discount_percent) || 0;
-        discountAmount = Math.round((numSubtotal * pct) / 100);
+        couponDiscount = Math.round((numSubtotal * pct) / 100);
       } else if (couponErr) {
         const STARTER_COUPONS: Record<string, number> = {
           WELCOME10: 10,
@@ -57,11 +57,20 @@ export async function POST(req: Request) {
         const upper = coupon_code.trim().toUpperCase();
         if (STARTER_COUPONS[upper]) {
           verifiedCouponCode = upper;
-          discountAmount = Math.round((numSubtotal * STARTER_COUPONS[upper]) / 100);
+          couponDiscount = Math.round((numSubtotal * STARTER_COUPONS[upper]) / 100);
         }
       }
     }
 
+    // 2b. Compute Routine Savings Server-Side
+    // Routine savings: 10% for 2 items, 13% for 3 items, 16% for 4 items, +3% per extra item
+    const totalItemCount = Array.isArray(items)
+      ? items.reduce((sum: number, it: any) => sum + (Number(it.qty) || 1), 0)
+      : 0;
+    const routinePct = totalItemCount >= 2 ? 10 + (totalItemCount - 2) * 3 : 0;
+    const routineSavings = routinePct > 0 ? Math.round((numSubtotal * routinePct) / 100) : 0;
+
+    const discountAmount = routineSavings + couponDiscount;
     const calculatedTotal = Math.max(0, numSubtotal - discountAmount) + shippingFee;
 
     // 3. Generate sequential reference (COS-XXXXX)
@@ -121,7 +130,8 @@ export async function POST(req: Request) {
       const fallbackNotes = [
         notes,
         province ? `Province: ${province}` : null,
-        verifiedCouponCode ? `Coupon: ${verifiedCouponCode} (Discount: Rs. ${discountAmount})` : null,
+        routinePct > 0 ? `Routine Savings: ${routinePct}% (-Rs. ${routineSavings})` : null,
+        verifiedCouponCode ? `Coupon: ${verifiedCouponCode} (Discount: Rs. ${couponDiscount})` : null,
         `Shipping: Rs. ${shippingFee}`
       ].filter(Boolean).join(' | ');
 

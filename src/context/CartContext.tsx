@@ -9,10 +9,14 @@ interface CartContextType {
   cart: CartItem[];
   cartCount: number;
   cartSubtotal: number;
+  routineDiscountPct: number;
+  routineSavings: number;
+  cartTotal: number;
   isCartOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
   addToCart: (productId: number | string, sourceEl?: HTMLElement | null) => void;
+  addMultipleToCart: (productIds: (number | string)[], sourceEl?: HTMLElement | null, toastMessage?: string) => void;
   removeFromCart: (productId: number | string) => void;
   changeQty: (productId: number | string, delta: number) => void;
   clearCart: () => void;
@@ -67,6 +71,25 @@ export function CartProvider({
       return sum + (product ? product.price * item.qty : 0);
     }, 0);
   }, [cart, initialProducts]);
+
+  // Routine tiered savings:
+  // 1 item: 0%
+  // 2 items: 10%
+  // 3 items: 13%
+  // 4 items: 16%
+  // N >= 2: 10 + (N - 2) * 3%
+  const routineDiscountPct = useMemo(() => {
+    return cartCount >= 2 ? 10 + (cartCount - 2) * 3 : 0;
+  }, [cartCount]);
+
+  const routineSavings = useMemo(() => {
+    if (routineDiscountPct <= 0) return 0;
+    return Math.round((cartSubtotal * routineDiscountPct) / 100);
+  }, [cartSubtotal, routineDiscountPct]);
+
+  const cartTotal = useMemo(() => {
+    return Math.max(0, cartSubtotal - routineSavings);
+  }, [cartSubtotal, routineSavings]);
 
   const triggerFlyAnimation = (sourceEl: HTMLElement) => {
     const cartIcon = document.getElementById('cartIconBtn');
@@ -126,6 +149,33 @@ export function CartProvider({
     }
   };
 
+  const addMultipleToCart = (
+    productIds: (number | string)[],
+    sourceEl?: HTMLElement | null,
+    toastMessage?: string
+  ) => {
+    if (!productIds.length) return;
+
+    setCart((prev) => {
+      let nextCart = [...prev];
+      productIds.forEach((pid) => {
+        const idx = nextCart.findIndex((item) => String(item.id) === String(pid));
+        if (idx >= 0) {
+          nextCart[idx] = { ...nextCart[idx], qty: nextCart[idx].qty + 1 };
+        } else {
+          nextCart.push({ id: pid, qty: 1 });
+        }
+      });
+      return nextCart;
+    });
+
+    if (sourceEl) {
+      triggerFlyAnimation(sourceEl);
+    }
+
+    showToast(toastMessage || `${productIds.length} routine products added to cart`);
+  };
+
   const removeFromCart = (productId: number | string) => {
     setCart((prev) => prev.filter((item) => String(item.id) !== String(productId)));
   };
@@ -157,10 +207,14 @@ export function CartProvider({
         cart,
         cartCount,
         cartSubtotal,
+        routineDiscountPct,
+        routineSavings,
+        cartTotal,
         isCartOpen,
         openCart,
         closeCart,
         addToCart,
+        addMultipleToCart,
         removeFromCart,
         changeQty,
         clearCart,

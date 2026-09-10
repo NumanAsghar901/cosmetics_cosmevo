@@ -11,7 +11,17 @@ import ProductArt from '@/components/ui/ProductArt';
 import { Tag, Check, X, AlertCircle } from 'lucide-react';
 
 export default function CheckoutPage() {
-  const { cart, cartSubtotal, changeQty, removeFromCart, clearCart, products } = useCart();
+  const { 
+    cart, 
+    cartCount,
+    cartSubtotal, 
+    routineDiscountPct, 
+    routineSavings, 
+    changeQty, 
+    removeFromCart, 
+    clearCart, 
+    products 
+  } = useCart();
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -45,6 +55,9 @@ export default function CheckoutPage() {
     shippingFee: number;
     deliveryFree: boolean;
     couponCode?: string;
+    couponDiscount: number;
+    routineSavings: number;
+    routineDiscountPct: number;
     discountAmount: number;
     total: number;
   } | null>(null);
@@ -60,11 +73,13 @@ export default function CheckoutPage() {
     : 300;
 
   // Coupon discount calculation
-  const discountAmount = appliedCoupon
+  const couponDiscountAmount = appliedCoupon
     ? Math.round((cartSubtotal * appliedCoupon.discount_percent) / 100)
     : 0;
 
-  const orderTotal = Math.max(0, cartSubtotal - discountAmount) + deliveryFee;
+  const totalDiscount = routineSavings + couponDiscountAmount;
+
+  const orderTotal = Math.max(0, cartSubtotal - totalDiscount) + deliveryFee;
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -155,7 +170,9 @@ export default function CheckoutPage() {
           items: orderItems,
           subtotal: cartSubtotal,
           coupon_code: appliedCoupon?.code,
-          discount_amount: discountAmount,
+          discount_amount: totalDiscount,
+          routine_savings: routineSavings,
+          routine_discount_pct: routineDiscountPct,
           shipping_fee: deliveryFee,
           total: orderTotal,
           payment_method: formData.payment,
@@ -176,7 +193,10 @@ export default function CheckoutPage() {
           shippingFee: deliveryFee,
           deliveryFree: isDeliveryFree,
           couponCode: appliedCoupon?.code,
-          discountAmount: discountAmount,
+          couponDiscount: couponDiscountAmount,
+          routineSavings: routineSavings,
+          routineDiscountPct: routineDiscountPct,
+          discountAmount: totalDiscount,
           total: orderTotal,
         });
         clearCart();
@@ -231,10 +251,16 @@ export default function CheckoutPage() {
               <span className="text-text-secondary">Subtotal</span>
               <span className="font-bold text-ink">{fmtPrice(completedOrder.subtotal)}</span>
             </div>
-            {Boolean(completedOrder.discountAmount > 0) && (
+            {Boolean(completedOrder.routineSavings > 0) && (
+              <div className="flex justify-between text-sm text-plum font-semibold">
+                <span>Routine Savings ({completedOrder.routineDiscountPct}%)</span>
+                <span>-{fmtPrice(completedOrder.routineSavings)}</span>
+              </div>
+            )}
+            {Boolean(completedOrder.couponDiscount > 0) && (
               <div className="flex justify-between text-sm text-emerald-700 font-semibold">
                 <span>Coupon Discount ({completedOrder.couponCode})</span>
-                <span>-{fmtPrice(completedOrder.discountAmount)}</span>
+                <span>-{fmtPrice(completedOrder.couponDiscount)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
@@ -643,7 +669,7 @@ export default function CheckoutPage() {
                         Code <span className="font-mono">{appliedCoupon.code}</span> applied!
                       </p>
                       <p className="text-[11px] text-emerald-700">
-                        {appliedCoupon.discount_percent}% discount (-{fmtPrice(discountAmount)})
+                        {appliedCoupon.discount_percent}% discount (-{fmtPrice(couponDiscountAmount)})
                       </p>
                     </div>
                   </div>
@@ -688,12 +714,24 @@ export default function CheckoutPage() {
                 <span>Subtotal</span>
                 <span className="font-bold text-ink">{fmtPrice(cartSubtotal)}</span>
               </div>
-              {appliedCoupon && discountAmount > 0 && (
-                <div className="flex justify-between text-emerald-700 font-semibold">
-                  <span>Coupon Discount ({appliedCoupon.code} - {appliedCoupon.discount_percent}%)</span>
-                  <span>-{fmtPrice(discountAmount)}</span>
+
+              {routineSavings > 0 && (
+                <div className="flex justify-between items-center text-plum font-bold bg-blush/40 px-3 py-1.5 rounded-lg">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-plum animate-pulse" />
+                    Routine Savings ({routineDiscountPct}%)
+                  </span>
+                  <span>-{fmtPrice(routineSavings)}</span>
                 </div>
               )}
+
+              {appliedCoupon && couponDiscountAmount > 0 && (
+                <div className="flex justify-between text-emerald-700 font-semibold bg-emerald-50 px-3 py-1.5 rounded-lg">
+                  <span>Coupon Discount ({appliedCoupon.code} - {appliedCoupon.discount_percent}%)</span>
+                  <span>-{fmtPrice(couponDiscountAmount)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between text-text-secondary">
                 <span>Delivery {formData.province ? `(${formData.province})` : ''}</span>
                 <span className={`font-bold ${isDeliveryFree ? 'text-plum' : 'text-ink'}`}>

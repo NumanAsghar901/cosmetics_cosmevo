@@ -19,11 +19,11 @@ export default function CtaBanner() {
               </p>
               <div className="mt-7">
                 <Link
-                  href="/shop"
-                  data-cursor="Shop"
+                  href="/#routine"
+                  data-cursor="Routine"
                   className="btn btn-primary magnetic bg-warm-white text-ink hover:bg-blush hover:text-ink font-bold py-3.5 px-8"
                 >
-                  Shop the Collection
+                  Build Your Routine
                 </Link>
               </div>
             </div>

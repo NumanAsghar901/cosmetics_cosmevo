@@ -72,6 +72,15 @@ export default function Header({ categories = [] }: { categories?: DbCategory[] 
             >
               Shop
             </Link>
+            <Link
+              href="/#routine"
+              className="text-[15px] font-semibold transition-colors py-1 hover:text-plum text-ink flex items-center gap-1.5"
+            >
+              <span>Routines</span>
+              <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-plum/10 text-plum uppercase tracking-wider">
+                Save
+              </span>
+            </Link>
             {categories.map((cat) => (
               <Link
                 key={cat.id}
@@ -171,6 +180,16 @@ export default function Header({ categories = [] }: { categories?: DbCategory[] 
               className="py-3 text-[15px] font-semibold text-ink border-b border-border-subtle/50 hover:text-plum"
             >
               Shop
+            </Link>
+            <Link
+              href="/#routine"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="py-3 text-[15px] font-semibold text-ink border-b border-border-subtle/50 hover:text-plum flex items-center justify-between"
+            >
+              <span>Routines &amp; Bundles</span>
+              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-plum/10 text-plum uppercase">
+                Save 10%+
+              </span>
             </Link>
             {categories.map((cat) => (
               <Link
