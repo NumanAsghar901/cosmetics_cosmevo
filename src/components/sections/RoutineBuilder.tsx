@@ -500,61 +500,7 @@ export default function RoutineBuilder({ products }: RoutineBuilderProps) {
                 )}
               </div>
 
-              {/* Dynamic Discount Motivator / Callout */}
-              <div className="mt-2 mb-4 p-3.5 rounded-2xl bg-cream border border-border-subtle">
-                <div className="flex items-center justify-between text-xs font-bold mb-1.5">
-                  <span className="text-ink">Routine Discount Tier</span>
-                  <span className={discountPct > 0 ? 'text-plum' : 'text-text-secondary'}>
-                    {discountPct > 0 ? `${discountPct}% OFF` : '0%'}
-                  </span>
-                </div>
 
-                {/* Progress bar visual */}
-                <div className="w-full h-2 bg-warm-white rounded-full overflow-hidden mb-2 border border-border-subtle/50">
-                  <div
-                    className="h-full bg-plum transition-all duration-300 rounded-full"
-                    style={{
-                      width:
-                        selectedCount === 0
-                          ? '0%'
-                          : selectedCount === 1
-                          ? '33%'
-                          : selectedCount === 2
-                          ? '66%'
-                          : '100%',
-                    }}
-                  />
-                </div>
-
-                <p className="text-[11.5px] text-text-secondary leading-snug">
-                  {selectedCount === 0 && (
-                    <span>Add 2 products to unlock <strong>10% OFF</strong> your complete routine.</span>
-                  )}
-                  {selectedCount === 1 && (
-                    <span>Add 1 more product to unlock <strong>10% Routine Savings</strong>!</span>
-                  )}
-                  {selectedCount === 2 && (
-                    <span className="text-plum font-semibold">
-                      🎉 10% Savings applied (-{fmtPrice(savingsAmount)})! Add 1 more for <strong>13% OFF</strong>.
-                    </span>
-                  )}
-                  {selectedCount === 3 && (
-                    <span className="text-plum font-semibold">
-                      🎉 13% Savings applied (-{fmtPrice(savingsAmount)})! Add 1 more for <strong>16% OFF</strong>.
-                    </span>
-                  )}
-                  {selectedCount === 4 && (
-                    <span className="text-plum font-semibold">
-                      🎉 16% Savings applied (-{fmtPrice(savingsAmount)})! Add 1 more for <strong>19% OFF</strong>.
-                    </span>
-                  )}
-                  {selectedCount >= 5 && (
-                    <span className="text-plum font-semibold">
-                      🔥 Super Routine! {discountPct}% Savings applied (-{fmtPrice(savingsAmount)})!
-                    </span>
-                  )}
-                </p>
-              </div>
 
               {/* Price Calculation Box */}
               <div className="space-y-2 pt-3 border-t border-border-subtle text-sm">

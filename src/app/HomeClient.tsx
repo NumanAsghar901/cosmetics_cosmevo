@@ -105,13 +105,13 @@ export default function HomeClient({
         </div>
       </section>
 
-      {/* 3.5 BUILD YOUR ROUTINE & BUNDLE BUILDER */}
-      <RoutineBuilder products={initialProducts} />
-
       {/* 4. VIDEO SHOWCASE & REELS */}
       <VideoShowcase videos={videos} />
 
-      {/* 5. WHY COSMEVO */}
+      {/* 5. BUILD YOUR ROUTINE & BUNDLE BUILDER */}
+      <RoutineBuilder products={initialProducts} />
+
+      {/* 6. WHY COSMEVO */}
       <WhyCosmevo />
 
       {/* 6. FAQ ACCORDION */}
