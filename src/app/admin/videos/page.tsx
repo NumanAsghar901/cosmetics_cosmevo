@@ -22,6 +22,15 @@ export default function AdminVideosPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [playingPreviewId, setPlayingPreviewId] = useState<string | null>(null);
 
+  // Video upload progress states
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadFileName, setUploadFileName] = useState('');
+  const [uploadFileSize, setUploadFileSize] = useState('');
+  const [uploadLoadedBytes, setUploadLoadedBytes] = useState(0);
+  const [uploadTotalBytes, setUploadTotalBytes] = useState(0);
+  const [videoDisplayName, setVideoDisplayName] = useState('');
+  const activeXhrRef = useRef<XMLHttpRequest | null>(null);
+
   const videoFileInputRef = useRef<HTMLInputElement>(null);
   const thumbFileInputRef = useRef<HTMLInputElement>(null);
 
@@ -110,48 +119,129 @@ export default function AdminVideosPage() {
     }
   }
 
+  const handleCancelUpload = () => {
+    if (activeXhrRef.current) {
+      activeXhrRef.current.abort();
+      activeXhrRef.current = null;
+    }
+    setIsUploadingVideo(false);
+    setUploadProgress(0);
+    setUploadFileName('');
+    setUploadFileSize('');
+    if (videoFileInputRef.current) videoFileInputRef.current.value = '';
+  };
+
+  const handleRemoveVideo = () => {
+    if (activeXhrRef.current) {
+      activeXhrRef.current.abort();
+      activeXhrRef.current = null;
+    }
+    setForm((prev) => ({ ...prev, video_url: '' }));
+    setVideoDisplayName('');
+    setUploadProgress(0);
+    setUploadFileName('');
+    setUploadFileSize('');
+    if (videoFileInputRef.current) videoFileInputRef.current.value = '';
+  };
+
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Reset and initialize progress state
     setIsUploadingVideo(true);
+    setUploadProgress(0);
+    setUploadFileName(file.name);
+    const sizeInMb = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+    setUploadFileSize(sizeInMb);
+    setUploadLoadedBytes(0);
+    setUploadTotalBytes(file.size);
     setFormError(null);
 
     const cName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || CLOUDINARY_CLOUD_NAME;
     const uPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || CLOUDINARY_UPLOAD_PRESET;
 
+    // Helper to upload with real-time XMLHttpRequest progress
+    const uploadWithXhr = (url: string, formData: FormData): Promise<{ ok: boolean; status: number; data: any }> => {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        activeXhrRef.current = xhr;
+        xhr.open('POST', url);
+
+        xhr.upload.onprogress = (evt) => {
+          if (evt.lengthComputable) {
+            const pct = Math.min(99, Math.round((evt.loaded / evt.total) * 100));
+            setUploadProgress(pct);
+            setUploadLoadedBytes(evt.loaded);
+            setUploadTotalBytes(evt.total);
+          }
+        };
+
+        xhr.onload = () => {
+          activeXhrRef.current = null;
+          let data: any = {};
+          try {
+            data = JSON.parse(xhr.responseText);
+          } catch {
+            data = { raw: xhr.responseText };
+          }
+          resolve({
+            ok: xhr.status >= 200 && xhr.status < 300,
+            status: xhr.status,
+            data,
+          });
+        };
+
+        xhr.onerror = () => {
+          activeXhrRef.current = null;
+          reject(new Error('Network connection error during video upload. Please check your internet connection.'));
+        };
+
+        xhr.onabort = () => {
+          activeXhrRef.current = null;
+          reject(new Error('Upload canceled.'));
+        };
+
+        xhr.send(formData);
+      });
+    };
+
     try {
-      // 1. Direct Cloudinary upload (permanent global CDN, works on Vercel & bypasses serverless limits)
+      // 1. Direct Cloudinary upload with real-time progress bar (works on Vercel & bypasses serverless limits)
       if (cName && uPreset) {
         try {
           const cFd = new FormData();
           cFd.append('file', file);
           cFd.append('upload_preset', uPreset);
 
-          const cRes = await fetch(`https://api.cloudinary.com/v1_1/${cName}/video/upload`, {
-            method: 'POST',
-            body: cFd,
-          });
+          const { ok, data: cData, status } = await uploadWithXhr(
+            `https://api.cloudinary.com/v1_1/${cName}/video/upload`,
+            cFd
+          );
 
-          const cData = await cRes.json().catch(() => ({}));
-
-          if (cRes.ok && (cData.secure_url || cData.url)) {
+          if (ok && (cData.secure_url || cData.url)) {
+            setUploadProgress(100);
             setForm((prev) => ({
               ...prev,
               video_url: cData.secure_url || cData.url,
               thumbnail_url: prev.thumbnail_url || (cData.secure_url ? cData.secure_url.replace(/\.[^/.]+$/, ".jpg") : ''),
             }));
+            setVideoDisplayName(file.name);
             setIsUploadingVideo(false);
             if (videoFileInputRef.current) videoFileInputRef.current.value = '';
             return;
           } else {
-            const detail = cData?.error?.message || `HTTP status ${cRes.status}`;
+            const detail = cData?.error?.message || `HTTP status ${status}`;
             console.error('Cloudinary video upload failed:', cData);
             if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
               throw new Error(`Cloudinary upload failed: ${detail}`);
             }
           }
         } catch (cErr: any) {
+          if (cErr.message === 'Upload canceled.') {
+            setIsUploadingVideo(false);
+            return;
+          }
           if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
             throw cErr;
           }
@@ -159,30 +249,29 @@ export default function AdminVideosPage() {
         }
       }
 
-      // 2. Fallback to /api/upload/video (only on localhost)
+      // 2. Fallback to /api/upload/video (only on localhost) with progress
       const fd = new FormData();
       fd.append('file', file);
 
-      const res = await fetch('/api/upload/video', {
-        method: 'POST',
-        body: fd,
-      });
+      const { ok, data: localData } = await uploadWithXhr('/api/upload/video', fd);
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.error || 'Failed to upload video');
+      if (!ok) {
+        throw new Error(localData?.error || 'Failed to upload video');
       }
 
-      const data = await res.json();
-      if (data.url) {
+      if (localData?.url) {
+        setUploadProgress(100);
         setForm((prev) => ({
           ...prev,
-          video_url: data.url,
+          video_url: localData.url,
         }));
+        setVideoDisplayName(file.name);
       }
     } catch (err: any) {
-      console.error('Video upload error:', err);
-      setFormError(err.message || 'Video upload failed. Please try again.');
+      if (err.message !== 'Upload canceled.') {
+        console.error('Video upload error:', err);
+        setFormError(err.message || 'Video upload failed. Please try again.');
+      }
     } finally {
       setIsUploadingVideo(false);
       if (videoFileInputRef.current) videoFileInputRef.current.value = '';
@@ -278,6 +367,10 @@ export default function AdminVideosPage() {
       display_order: videos.length + 1,
       is_active: true,
     });
+    setVideoDisplayName('');
+    setUploadProgress(0);
+    setUploadFileName('');
+    setUploadFileSize('');
     setFormError(null);
     setIsModalOpen(true);
   };
@@ -295,8 +388,22 @@ export default function AdminVideosPage() {
       display_order: video.display_order ?? 1,
       is_active: video.is_active ?? true,
     });
+    const extractedName = video.video_url
+      ? decodeURIComponent(video.video_url.split('/').pop()?.split('?')[0] || 'Saved Video')
+      : '';
+    setVideoDisplayName(extractedName);
+    setUploadProgress(0);
+    setUploadFileName('');
+    setUploadFileSize('');
     setFormError(null);
     setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    if (isUploadingVideo) {
+      handleCancelUpload();
+    }
+    setIsModalOpen(false);
   };
 
   const handleProductSelect = (productId: string) => {
@@ -703,7 +810,7 @@ export default function AdminVideosPage() {
                 {form.id ? 'Edit Showcase Video' : 'Upload Showcase Video'}
               </h2>
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={closeModal}
                 className="p-1 hover:bg-cream rounded-lg text-ink/60 hover:text-ink transition-colors"
               >
                 <X size={20} />
@@ -747,30 +854,40 @@ export default function AdminVideosPage() {
                 />
               </div>
 
-              {/* Video File Upload & URL */}
+              {/* Video File Upload & Preview */}
               <div className="space-y-3">
                 <label className="block text-xs font-bold text-ink">
                   Video Source (MP4, WebM, MOV) <span className="text-plum">*</span>
                 </label>
 
                 {form.video_url ? (
-                  <div className="p-3 bg-cream/50 border border-plum/20 rounded-xl space-y-2.5">
+                  <div className="p-3.5 bg-cream/50 border border-plum/20 rounded-xl space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-green-700 flex items-center gap-1.5">
-                        <Check size={16} className="text-green-600" />
+                      <span className="text-xs font-bold text-emerald-700 flex items-center gap-1.5">
+                        <Check size={16} className="text-emerald-600" />
                         Video Loaded &amp; Ready
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => videoFileInputRef.current?.click()}
-                        disabled={isUploadingVideo}
-                        className="text-xs text-plum font-semibold hover:underline"
-                      >
-                        Change Video
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => videoFileInputRef.current?.click()}
+                          disabled={isUploadingVideo}
+                          className="text-xs text-plum font-semibold hover:underline"
+                        >
+                          Change Video
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleRemoveVideo}
+                          disabled={isUploadingVideo}
+                          className="text-xs text-red-600 font-semibold hover:underline"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="aspect-video max-h-44 bg-black rounded-lg overflow-hidden flex items-center justify-center">
+                    <div className="aspect-video max-h-48 bg-black rounded-xl overflow-hidden flex items-center justify-center shadow-inner">
                       <video
                         src={form.video_url}
                         controls
@@ -779,40 +896,91 @@ export default function AdminVideosPage() {
                       />
                     </div>
 
-                    <div className="text-[11px] font-mono text-ink/60 truncate">
-                      {form.video_url}
+                    {/* Clean Video File Badge (NO raw Cloudinary URLs exposed) */}
+                    <div className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-border-subtle text-xs">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Film size={15} className="text-plum shrink-0" />
+                        <span className="font-semibold text-ink truncate text-xs">
+                          {videoDisplayName || (uploadFileName || 'Uploaded Video File')}
+                        </span>
+                        {uploadFileSize && (
+                          <span className="text-[11px] text-text-secondary shrink-0">
+                            ({uploadFileSize})
+                          </span>
+                        )}
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 shrink-0">
+                        Ready
+                      </span>
                     </div>
                   </div>
                 ) : (
-                  /* Direct Upload Box */
-                  <div 
-                    onClick={() => videoFileInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-colors ${
-                      isUploadingVideo 
-                        ? 'bg-cream/70 border-plum/40' 
-                        : 'border-border-subtle hover:border-plum/50 hover:bg-warm-white'
-                    }`}
-                  >
-                    <input
-                      type="file"
-                      ref={videoFileInputRef}
-                      accept="video/mp4,video/webm,video/quicktime,video/*"
-                      onChange={handleVideoUpload}
-                      className="hidden"
-                      disabled={isUploadingVideo}
-                    />
-
+                  /* Direct Upload Box or Real-time Progress Bar */
+                  <div>
                     {isUploadingVideo ? (
-                      <div className="flex flex-col items-center justify-center gap-2 py-2">
-                        <Loader2 size={26} className="animate-spin text-plum" />
-                        <span className="text-xs font-bold text-ink">Uploading &amp; Saving Video…</span>
-                        <span className="text-[11px] text-text-secondary">Please wait while your video file is being uploaded.</span>
+                      <div className="p-5 bg-warm-white border-2 border-plum/30 rounded-xl space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-plum/10 text-plum flex items-center justify-center shrink-0 animate-pulse">
+                              <UploadCloud size={20} />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-ink">
+                                {uploadProgress >= 100 ? 'Processing Video on CDN…' : 'Uploading Video File…'}
+                              </p>
+                              <p className="text-[11px] text-text-secondary truncate">
+                                {uploadFileName || 'video.mp4'} {uploadFileSize ? `(${uploadFileSize})` : ''}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-sm font-extrabold text-plum font-mono shrink-0 pl-2">
+                            {uploadProgress}%
+                          </span>
+                        </div>
+
+                        {/* Visual Animated Progress Bar */}
+                        <div className="w-full h-2.5 bg-plum/10 rounded-full overflow-hidden p-0.5 border border-plum/15">
+                          <div
+                            className="h-full bg-gradient-to-r from-plum via-[#9e4468] to-plum rounded-full transition-all duration-200 ease-out shadow-xs"
+                            style={{ width: `${Math.max(4, uploadProgress)}%` }}
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] text-text-secondary pt-0.5">
+                          <span>
+                            {uploadProgress >= 100
+                              ? 'Finalizing video ready state…'
+                              : `${((uploadLoadedBytes || 0) / (1024 * 1024)).toFixed(1)} MB of ${((uploadTotalBytes || 0) / (1024 * 1024)).toFixed(1)} MB`}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleCancelUpload}
+                            className="text-red-600 font-semibold hover:underline cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                        </div>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center gap-1.5 py-1">
-                        <UploadCloud size={28} className="text-plum" />
-                        <span className="text-xs font-semibold text-ink">Click or Drag to Upload Video File</span>
-                        <span className="text-[11px] text-text-secondary">Supports MP4, WebM, MOV directly from your device</span>
+                      <div 
+                        onClick={() => videoFileInputRef.current?.click()}
+                        className="border-2 border-dashed border-border-subtle hover:border-plum/50 hover:bg-warm-white rounded-xl p-6 text-center cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="file"
+                          ref={videoFileInputRef}
+                          accept="video/mp4,video/webm,video/quicktime,video/*"
+                          onChange={handleVideoUpload}
+                          className="hidden"
+                          disabled={isUploadingVideo}
+                        />
+                        <div className="flex flex-col items-center justify-center gap-1.5 py-1">
+                          <div className="w-11 h-11 rounded-full bg-cream flex items-center justify-center text-plum mb-1">
+                            <UploadCloud size={24} />
+                          </div>
+                          <span className="text-xs font-bold text-ink">Click or Drag to Upload Video File</span>
+                          <span className="text-[11px] text-text-secondary">Supports MP4, WebM, MOV directly from your device</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -934,7 +1102,7 @@ export default function AdminVideosPage() {
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-subtle">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
+                  onClick={closeModal}
                   className="px-4 py-2.5 rounded-xl border border-border-subtle text-ink/70 hover:bg-cream text-sm font-semibold transition-colors"
                 >
                   Cancel
