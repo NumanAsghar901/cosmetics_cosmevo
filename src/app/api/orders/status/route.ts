@@ -12,29 +12,75 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(req: Request) {
   try {
-    const { orderId, newStatus } = await req.json();
+    const { orderId, newStatus, trackingNumber } = await req.json();
 
     if (!orderId || !newStatus) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 1. Update status in Supabase
-    const { data: updatedOrder, error: updateError } = await supabase
+    const cleanTracking = typeof trackingNumber === 'string' ? trackingNumber.trim() : undefined;
+
+    // 1. Update status and tracking_number in Supabase
+    let updatedOrder: any = null;
+    const updatePayload: Record<string, any> = { status: newStatus };
+    if (cleanTracking !== undefined) {
+      updatePayload.tracking_number = cleanTracking || null;
+    }
+
+    const { data, error: updateError } = await supabase
       .from('orders')
-      .update({ status: newStatus })
+      .update(updatePayload)
       .eq('id', orderId)
       .select()
       .single();
 
     if (updateError) {
-      console.error('Error updating order status:', updateError);
-      return NextResponse.json({ error: 'Failed to update order status' }, { status: 500 });
+      // If tracking_number column is not in Supabase yet, fallback gracefully by storing in notes
+      if (updateError.message?.includes('tracking_number') || updateError.message?.includes('column')) {
+        console.warn('tracking_number column missing in orders table, retrying with fallback in notes:', updateError.message);
+
+        // Fetch existing order notes
+        const { data: currentOrder } = await supabase
+          .from('orders')
+          .select('notes')
+          .eq('id', orderId)
+          .single();
+
+        let updatedNotes = currentOrder?.notes || '';
+        if (cleanTracking) {
+          updatedNotes = updatedNotes 
+            ? `${updatedNotes} | Leopards Tracking: ${cleanTracking}`
+            : `Leopards Tracking: ${cleanTracking}`;
+        }
+
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('orders')
+          .update({ status: newStatus, notes: updatedNotes })
+          .eq('id', orderId)
+          .select()
+          .single();
+
+        if (fallbackError) {
+          console.error('Fallback order status update failed:', fallbackError);
+          return NextResponse.json({ error: 'Failed to update order status' }, { status: 500 });
+        }
+
+        updatedOrder = {
+          ...fallbackData,
+          tracking_number: cleanTracking,
+        };
+      } else {
+        console.error('Error updating order status:', updateError);
+        return NextResponse.json({ error: 'Failed to update order status' }, { status: 500 });
+      }
+    } else {
+      updatedOrder = data;
     }
 
-    // 2. Send status update email
+    // 2. Send status update email (including Leopards tracking if shipped)
     if (updatedOrder) {
       try {
-        await sendOrderStatusEmail(updatedOrder as Order, newStatus);
+        await sendOrderStatusEmail(updatedOrder as Order, newStatus, cleanTracking);
       } catch (emailError) {
         console.error('Error sending status email:', emailError);
       }

@@ -5,7 +5,10 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Order } from '@/lib/types';
-import { ArrowLeft, User, MapPin, Package, CreditCard, Check, MailQuestion } from 'lucide-react';
+import { 
+  ArrowLeft, User, MapPin, Package, CreditCard, Check, 
+  Truck, Copy, ExternalLink, Edit2, X, CheckCircle2, Loader2 
+} from 'lucide-react';
 import { getLocalReadOrderIds, isOrderRead, markOrderAsRead, markOrderAsUnread } from '@/lib/ordersStorage';
 
 export default function OrderDetailsPage() {
@@ -14,6 +17,12 @@ export default function OrderDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isReadState, setIsReadState] = useState(true);
+
+  // Leopards Courier tracking states
+  const [isShipModalOpen, setIsShipModalOpen] = useState(false);
+  const [trackingInput, setTrackingInput] = useState('');
+  const [copiedTracking, setCopiedTracking] = useState(false);
+
   const supabase = createClient();
 
   useEffect(() => {
@@ -58,7 +67,22 @@ export default function OrderDetailsPage() {
     }
   };
 
-  const handleStatusChange = async (newStatus: string) => {
+  const onSelectStatus = (newStatus: string) => {
+    if (newStatus === 'shipped') {
+      const existingTracking = order?.tracking_number || (order?.notes?.match(/Leopards Tracking:\s*([^\s|]+)/)?.[1]) || '';
+      setTrackingInput(existingTracking);
+      setIsShipModalOpen(true);
+    } else {
+      handleStatusChange(newStatus);
+    }
+  };
+
+  const handleConfirmShip = async (trackingNum?: string) => {
+    await handleStatusChange('shipped', trackingNum);
+    setIsShipModalOpen(false);
+  };
+
+  const handleStatusChange = async (newStatus: string, trackingNum?: string) => {
     if (!order) return;
     setIsUpdating(true);
     try {
@@ -70,13 +94,18 @@ export default function OrderDetailsPage() {
         body: JSON.stringify({
           orderId: order.id,
           newStatus: newStatus,
+          trackingNumber: trackingNum,
         }),
       });
 
       const result = await res.json();
       
       if (res.ok && result.success) {
-        setOrder({ ...order, status: newStatus as any });
+        setOrder((prev) => prev ? ({
+          ...prev,
+          status: newStatus as any,
+          ...(trackingNum !== undefined ? { tracking_number: trackingNum } : {})
+        }) : null);
       } else {
         throw new Error(result.error || 'Failed to update order status');
       }
@@ -86,6 +115,13 @@ export default function OrderDetailsPage() {
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const handleCopyTracking = (trackNum: string) => {
+    if (!trackNum) return;
+    navigator.clipboard.writeText(trackNum);
+    setCopiedTracking(true);
+    setTimeout(() => setCopiedTracking(false), 2000);
   };
 
   if (isLoading) {
@@ -99,6 +135,8 @@ export default function OrderDetailsPage() {
   if (!order) {
     return <div className="text-center py-12 text-ink/60">Order not found.</div>;
   }
+
+  const effectiveTracking = order.tracking_number || (order.notes?.match(/Leopards Tracking:\s*([^\s|]+)/)?.[1]) || '';
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -157,7 +195,7 @@ export default function OrderDetailsPage() {
             <label className="text-sm font-medium text-ink hidden sm:inline">Status:</label>
             <select
               value={order.status || 'pending'}
-              onChange={(e) => handleStatusChange(e.target.value)}
+              onChange={(e) => onSelectStatus(e.target.value)}
               disabled={isUpdating}
               className="px-3 sm:px-4 py-2 border border-border-subtle rounded-lg bg-white focus:ring-2 focus:ring-plum/20 focus:border-plum text-sm font-medium capitalize disabled:opacity-50"
             >
@@ -242,8 +280,83 @@ export default function OrderDetailsPage() {
           )}
         </div>
 
-        {/* Right Column: Customer Details */}
+        {/* Right Column: Customer Details & Leopards Courier */}
         <div className="space-y-6">
+          {(order.status === 'shipped' || effectiveTracking) && (
+            <div className="bg-white rounded-2xl border border-plum/20 shadow-sm overflow-hidden ring-1 ring-plum/5">
+              <div className="px-6 py-4 bg-plum/5 border-b border-plum/10 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-plum">
+                  <Truck size={20} className="stroke-[2.2]" />
+                  <h2 className="text-base font-bold text-ink">Leopards Courier</h2>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">
+                  Shipped
+                </span>
+              </div>
+              <div className="p-6 space-y-4">
+                {effectiveTracking ? (
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-ink/50">Tracking / Consignment #</span>
+                    <div className="mt-1 flex items-center justify-between p-3 bg-warm-white rounded-xl border border-border-subtle">
+                      <span className="font-mono font-bold text-ink text-base tracking-wide select-all">
+                        {effectiveTracking}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyTracking(effectiveTracking)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-plum hover:bg-plum/10 rounded-lg transition-colors"
+                      >
+                        {copiedTracking ? (
+                          <>
+                            <CheckCircle2 size={14} className="text-emerald-600" />
+                            <span className="text-emerald-700">Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={14} />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-ink/60 italic">
+                    Shipped without tracking number.
+                  </div>
+                )}
+
+                <div className="space-y-2 pt-2">
+                  <a
+                    href="https://pk.leopardscourier.com/tracking"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-plum text-white hover:bg-plum/90 font-semibold text-xs transition-all shadow-sm group"
+                  >
+                    <span>Track on Leopards Website</span>
+                    <ExternalLink size={14} className="transition-transform group-hover:translate-x-0.5" />
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTrackingInput(effectiveTracking);
+                      setIsShipModalOpen(true);
+                    }}
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-warm-white hover:bg-border-subtle/40 text-ink/80 text-xs font-semibold border border-border-subtle transition-colors"
+                  >
+                    <Edit2 size={13} />
+                    <span>{effectiveTracking ? 'Edit Tracking #' : 'Add Tracking #'}</span>
+                  </button>
+                </div>
+
+                <p className="text-[11px] leading-relaxed text-ink/50 pt-1 border-t border-border-subtle">
+                  Official tracking link <span className="font-mono text-plum font-semibold">pk.leopardscourier.com/tracking</span> and tracking number are sent in customer emails when order is marked shipped.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-2xl border border-border-subtle shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-border-subtle flex items-center gap-2">
               <User size={20} className="text-plum" />
@@ -293,6 +406,95 @@ export default function OrderDetailsPage() {
           </div>
         </div>
       </div>
+
+      {/* Leopards Courier Shipping Modal */}
+      {isShipModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl border border-border-subtle shadow-2xl max-w-md w-full overflow-hidden animate-scaleIn">
+            <div className="p-6 border-b border-border-subtle bg-plum/5 flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-plum/10 text-plum flex items-center justify-center">
+                  <Truck size={22} className="stroke-[2.2]" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-ink">Ship via Leopards Courier</h3>
+                  <p className="text-xs text-ink/60">Order #{order.reference}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsShipModalOpen(false)}
+                className="p-1.5 text-ink/50 hover:text-ink hover:bg-ink/5 rounded-lg transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-xs text-ink/70 leading-relaxed">
+                Add the <strong>Leopards Courier Tracking / Consignment Number</strong> for this shipment. 
+                The customer will receive an email with the tracking number and a direct link to{' '}
+                <span className="font-semibold text-plum">pk.leopardscourier.com/tracking</span> to track their parcel.
+              </p>
+
+              <div>
+                <label className="block text-xs font-bold text-ink mb-1.5 uppercase tracking-wider">
+                  Leopards Consignment / Tracking #
+                </label>
+                <input
+                  type="text"
+                  value={trackingInput}
+                  onChange={(e) => setTrackingInput(e.target.value)}
+                  placeholder="e.g. LEO-123456789 or 77482910"
+                  className="w-full px-4 py-2.5 rounded-xl border border-border-subtle focus:outline-none focus:ring-2 focus:ring-plum/30 focus:border-plum text-sm font-mono text-ink placeholder:font-sans placeholder:text-ink/40"
+                  autoFocus
+                />
+                <p className="text-[11px] text-ink/50 mt-1.5">
+                  Courier tracking page:{' '}
+                  <span className="font-mono text-plum">https://pk.leopardscourier.com/tracking</span>
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-border-subtle flex flex-col sm:flex-row gap-2 sm:justify-end">
+                <button
+                  type="button"
+                  disabled={isUpdating}
+                  onClick={() => setIsShipModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-border-subtle text-xs font-semibold text-ink/70 hover:bg-cream transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isUpdating}
+                  onClick={() => handleConfirmShip('')}
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-ink/60 hover:text-ink hover:bg-ink/5 transition-colors"
+                >
+                  Ship Without Tracking
+                </button>
+                <button
+                  type="button"
+                  disabled={isUpdating}
+                  onClick={() => handleConfirmShip(trackingInput.trim())}
+                  className="px-5 py-2.5 rounded-xl bg-plum hover:bg-plum/90 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 disabled:opacity-50"
+                >
+                  {isUpdating ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Truck size={14} />
+                      <span>Mark Shipped & Send Email</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

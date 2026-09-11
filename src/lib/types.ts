@@ -50,6 +50,7 @@ export interface Order {
   customer_address: string;
   province?: string;
   notes?: string;
+  tracking_number?: string;
   items: {
     product_id: number | string;
     product_name: string;

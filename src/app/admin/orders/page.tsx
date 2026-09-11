@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Order } from '@/lib/types';
 import { 
   Eye, Clock, Check, CheckCircle2, Search, RefreshCw, 
-  Inbox, MailCheck, AlertCircle, ShoppingBag 
+  Inbox, MailCheck, AlertCircle, ShoppingBag, Truck 
 } from 'lucide-react';
 import { 
   getLocalReadOrderIds, 
@@ -436,6 +436,18 @@ export default function AdminOrdersPage() {
                         <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold capitalize border ${getStatusColor(order.status)}`}>
                           {order.status || 'pending'}
                         </span>
+                        {(() => {
+                          const track = order.tracking_number || (order.notes?.match(/Leopards Tracking:\s*([^\s|]+)/)?.[1]);
+                          if (order.status === 'shipped' && track) {
+                            return (
+                              <div className="text-[11px] font-mono text-purple-700 font-semibold mt-1 flex items-center gap-1">
+                                <Truck size={12} className="text-purple-600 inline" />
+                                <span>{track}</span>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </td>
 
                       {/* Total Amount */}
