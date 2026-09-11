@@ -26,7 +26,12 @@ export default function AdminProductsPage() {
         .order('created_at', { ascending: false });
       
       if (data) {
-        setProducts(data as Product[]);
+        const sorted = (data as Product[]).sort((a, b) => {
+          if (a.is_coming_soon && !b.is_coming_soon) return -1;
+          if (!a.is_coming_soon && b.is_coming_soon) return 1;
+          return 0;
+        });
+        setProducts(sorted);
       }
     } catch (error) {
       console.error('Error fetching products:', error);

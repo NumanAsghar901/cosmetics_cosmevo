@@ -12,6 +12,7 @@ export default function Footer({ categories = [] }: { categories?: DbCategory[] 
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [responseMsg, setResponseMsg] = useState<string>('');
   const { showToast } = useToast();
 
   const handleSubscribe = async (e: React.FormEvent) => {
@@ -19,18 +20,33 @@ export default function Footer({ categories = [] }: { categories?: DbCategory[] 
     if (!email || !email.includes('@')) return;
 
     setIsLoading(true);
+    setResponseMsg('');
 
-    if (isSupabaseConfigured && supabase) {
-      try {
-        await supabase.from('subscribers').insert([{ email }]);
-      } catch {
-        // graceful offline fallback
+    try {
+      const res = await fetch('/api/subscribers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIsSubmitted(true);
+        const msg = data.message || "Thanks — you're on the list!";
+        setResponseMsg(msg);
+        showToast(msg);
+        setEmail('');
+      } else {
+        showToast(data.error || 'Could not subscribe. Please try again.');
       }
+    } catch {
+      setIsSubmitted(true);
+      setResponseMsg("Thanks — you're on the list!");
+      showToast("Thanks for subscribing to Cosmevo updates!");
+      setEmail('');
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
-    setIsSubmitted(true);
-    setEmail('');
   };
 
   const waHelpUrl = getWhatsAppUrl('Hi Cosmevo, I need help with my order or product advice.');
@@ -67,7 +83,7 @@ export default function Footer({ categories = [] }: { categories?: DbCategory[] 
             </button>
             {isSubmitted && (
               <span className="w-full text-xs font-bold text-peach mt-2 block animate-fadeIn">
-                Thanks — you&apos;re on the list!
+                {responseMsg || "Thanks — you're on the list!"}
               </span>
             )}
           </form>

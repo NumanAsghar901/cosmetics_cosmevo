@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Menu, X, Tags, TicketPercent, Film, Store } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Menu, X, Tags, TicketPercent, Film, Store, Mail } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { getLocalReadOrderIds } from '@/lib/ordersStorage';
 
@@ -56,6 +56,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Coupons', href: '/admin/coupons', icon: TicketPercent },
     { name: 'Videos', href: '/admin/videos', icon: Film },
     { name: 'Distributors', href: '/admin/distributors', icon: Store },
+    { name: 'Subscribers', href: '/admin/subscribers', icon: Mail },
   ];
 
   return (

@@ -28,10 +28,17 @@ export default function HomeClient({
   const [selectedConcern, setSelectedConcern] = useState<string | null>(null);
 
   const filteredProducts = useMemo(() => {
-    return initialProducts.filter((p) => {
+    const list = initialProducts.filter((p) => {
       const matchCat = selectedCategory === 'all' || p.category === selectedCategory;
       const matchConcern = !selectedConcern || p.concerns.includes(selectedConcern);
       return matchCat && matchConcern;
+    });
+
+    // Coming soon products always come first, then others
+    return list.sort((a, b) => {
+      if (a.is_coming_soon && !b.is_coming_soon) return -1;
+      if (!a.is_coming_soon && b.is_coming_soon) return 1;
+      return 0;
     });
   }, [initialProducts, selectedCategory, selectedConcern]);
 

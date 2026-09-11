@@ -260,8 +260,16 @@ export const BUNDLED_PRODUCTS: Product[] = [
 ];
 
 export async function getAllProducts(): Promise<Product[]> {
+  const sortComingSoonFirst = (list: Product[]) => {
+    return [...list].sort((a, b) => {
+      if (a.is_coming_soon && !b.is_coming_soon) return -1;
+      if (!a.is_coming_soon && b.is_coming_soon) return 1;
+      return 0;
+    });
+  };
+
   if (!isSupabaseConfigured || !supabase) {
-    return BUNDLED_PRODUCTS;
+    return sortComingSoonFirst(BUNDLED_PRODUCTS);
   }
 
   try {
@@ -271,10 +279,10 @@ export async function getAllProducts(): Promise<Product[]> {
       .order('created_at', { ascending: false });
 
     if (error || !data || data.length === 0) {
-      return BUNDLED_PRODUCTS;
+      return sortComingSoonFirst(BUNDLED_PRODUCTS);
     }
 
-    return data
+    const mapped: Product[] = data
       .filter((row) => row.name !== 'LACABINE CREAM BTX7 LIFT 50ML')
       .map((row) => ({
       id: row.id,
@@ -294,8 +302,11 @@ export async function getAllProducts(): Promise<Product[]> {
       is_coming_soon: Boolean(row.is_coming_soon),
       image_url: row.image_url || FALLBACK_IMAGES[row.category] || FALLBACK_IMAGES.face,
     }));
+
+    // Coming soon products always come first, then others
+    return sortComingSoonFirst(mapped);
   } catch {
-    return BUNDLED_PRODUCTS;
+    return sortComingSoonFirst(BUNDLED_PRODUCTS);
   }
 }
 
